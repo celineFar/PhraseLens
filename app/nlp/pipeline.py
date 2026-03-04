@@ -8,7 +8,18 @@ _nlp = None
 def get_nlp():
     global _nlp
     if _nlp is None:
-        _nlp = spacy.load(settings.spacy_model)
+        try:
+            _nlp = spacy.load(settings.spacy_model)
+        except OSError as exc:
+            raise RuntimeError(
+                "spaCy model "
+                f"'{settings.spacy_model}' is not installed.\n"
+                "Install it with:\n"
+                f"  python -m spacy download {settings.spacy_model}\n"
+                "If this environment has no internet access, download the model wheel on"
+                " a machine with internet and install it with:\n"
+                "  pip install /path/to/en_core_web_sm-<version>-py3-none-any.whl"
+            ) from exc
     return _nlp
 
 
