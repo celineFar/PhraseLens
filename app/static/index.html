@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Content Search</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #0f1117; color: #e1e4e8; min-height: 100vh; }
+    .container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
+    h1 { font-size: 1.8rem; margin-bottom: 1.5rem; color: #f0f0f0; }
+    h2 { font-size: 1.1rem; margin-bottom: 0.75rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border-bottom: 1px solid #30363d; }
+    .tab { padding: 0.6rem 1.2rem; cursor: pointer; border: none; background: none; color: #8b949e; font-size: 0.95rem; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .tab:hover { color: #e1e4e8; }
+    .tab.active { color: #58a6ff; border-bottom-color: #58a6ff; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* Forms */
+    .form-row { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    input, select { background: #161b22; border: 1px solid #30363d; color: #e1e4e8; padding: 0.6rem 0.8rem; border-radius: 6px; font-size: 0.95rem; outline: none; }
+    input:focus, select:focus { border-color: #58a6ff; }
+    input[type="text"] { flex: 1; }
+    select { min-width: 180px; }
+    button { background: #238636; color: #fff; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-size: 0.95rem; white-space: nowrap; }
+    button:hover { background: #2ea043; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.secondary { background: #30363d; }
+    button.secondary:hover { background: #3d444d; }
+
+    /* Results */
+    .status { padding: 0.8rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem; }
+    .status.info { background: #0d1d30; border: 1px solid #1f3a5f; color: #58a6ff; }
+    .status.success { background: #0d2818; border: 1px solid #1a4d2e; color: #3fb950; }
+    .status.error { background: #2d1215; border: 1px solid #5a1e23; color: #f85149; }
+    .results-info { color: #8b949e; margin-bottom: 0.75rem; font-size: 0.9rem; }
+
+    .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .card-title { font-weight: 600; color: #f0f0f0; font-size: 0.95rem; }
+    .card-badge { background: #30363d; color: #8b949e; padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.75rem; }
+    .card-text { color: #c9d1d9; font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; }
+    .card-meta { color: #8b949e; font-size: 0.8rem; margin-top: 0.5rem; }
+
+    mark { background: #6e40114d; color: #ffa657; border-radius: 2px; padding: 0 2px; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #30363d; border-top-color: #58a6ff; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 0.4rem; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty { text-align: center; color: #484f58; padding: 3rem 1rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Content Search</h1>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="search">Search</button>
+      <button class="tab" data-tab="ingest">Ingest</button>
+      <button class="tab" data-tab="sources">Sources</button>
+    </div>
+
+    <!-- SEARCH -->
+    <div id="search" class="panel active">
+      <div class="form-row">
+        <input type="text" id="query" placeholder="Search for a word or phrase..." />
+        <select id="source-filter">
+          <option value="">All sources</option>
+        </select>
+        <button onclick="doSearch()">Search</button>
+      </div>
+      <div id="search-status"></div>
+      <div id="search-results"></div>
+    </div>
+
+    <!-- INGEST -->
+    <div id="ingest" class="panel">
+      <h2>Ingest a CSV file</h2>
+      <div class="form-row">
+        <select id="file-select"><option value="">Loading files...</option></select>
+        <button onclick="doIngest()">Ingest</button>
+        <button class="secondary" onclick="loadFiles()">Refresh</button>
+      </div>
+      <div id="ingest-status"></div>
+    </div>
+
+    <!-- SOURCES -->
+    <div id="sources" class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h2 style="margin:0">Ingested Sources</h2>
+        <button class="secondary" onclick="loadSources()">Refresh</button>
+      </div>
+      <div id="sources-list"></div>
+    </div>
+  </div>
+
+  <script>
+    const API = '';
+
+    // Tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+        if (tab.dataset.tab === 'sources') loadSources();
+        if (tab.dataset.tab === 'ingest') loadFiles();
+        if (tab.dataset.tab === 'search') loadSourceFilter();
+      });
+    });
+
+    // Search
+    document.getElementById('query').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doSearch();
+    });
+
+    async function doSearch() {
+      const query = document.getElementById('query').value.trim();
+      if (!query) return;
+      const sourceId = document.getElementById('source-filter').value || null;
+      const statusEl = document.getElementById('search-status');
+      const resultsEl = document.getElementById('search-results');
+      statusEl.innerHTML = '<div class="status info"><span class="spinner"></span> Searching...</div>';
+      resultsEl.innerHTML = '';
+
+      try {
+        const body = { query, mode: 'exact', limit: 50 };
+        if (sourceId) body.source_id = sourceId;
+        const res = await fetch(API + '/api/search', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Search failed');
+
+        statusEl.innerHTML = `<div class="results-info">Found <strong>${data.total}</strong> passages matching lemmas: <code>${data.lemmas.join(', ')}</code></div>`;
+
+        if (data.results.length === 0) {
+          resultsEl.innerHTML = '<div class="empty">No results found</div>';
+          return;
+        }
+
+        resultsEl.innerHTML = data.results.map(r => {
+          let text = escapeHtml(r.text);
+          // Highlight matching tokens
+          if (data.lemmas.length > 0) {
+            data.lemmas.forEach(lemma => {
+              const re = new RegExp(`\\b(${escapeRegex(lemma)}\\w*)\\b`, 'gi');
+              text = text.replace(re, '<mark>$1</mark>');
+            });
+          }
+          return `<div class="card">
+            <div class="card-header">
+              <span class="card-title">${escapeHtml(r.source.title)}</span>
+              <span class="card-badge">${escapeHtml(r.location_label)}</span>
+            </div>
+            <div class="card-text">${text}</div>
+          </div>`;
+        }).join('');
+      } catch (err) {
+        statusEl.innerHTML = `<div class="status error">${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    // Ingest
+    async function loadFiles() {
+      const sel = document.getElementById('file-select');
+      try {
+        const res = await fetch(API + '/api/ingest/files');
+        const data = await res.json();
+        sel.innerHTML = data.files.length
+          ? data.files.map(f => `<option value="${f}">${f}</option>`).join('')
+          : '<option value="">No CSV files found</option>';
+      } catch {
+        sel.innerHTML = '<option value="">Failed to load</option>';
+      }
+    }
+
+    async function doIngest() {
+      const filename = document.getElementById('file-select').value;
+      if (!filename) return;
+      const statusEl = document.getElementById('ingest-status');
+      statusEl.innerHTML = '<div class="status info"><span class="spinner"></span> Ingesting... this may take a minute.</div>';
+
+      try {
+        const res = await fetch(API + '/api/ingest', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Ingestion failed');
+        statusEl.innerHTML = `<div class="status success">Ingested <strong>${data.source.title}</strong> — ${data.passages_created} passages created.</div>`;
+      } catch (err) {
+        statusEl.innerHTML = `<div class="status error">${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    // Sources
+    async function loadSources() {
+      const el = document.getElementById('sources-list');
+      try {
+        const res = await fetch(API + '/api/sources');
+        const data = await res.json();
+        if (data.sources.length === 0) {
+          el.innerHTML = '<div class="empty">No sources ingested yet. Go to the Ingest tab to add one.</div>';
+          return;
+        }
+        el.innerHTML = data.sources.map(s => `<div class="card">
+          <div class="card-header">
+            <span class="card-title">${escapeHtml(s.title)}</span>
+            <span class="card-badge">${s.passage_count} passages</span>
+          </div>
+          <div class="card-meta">Type: ${s.type} · ID: ${s.id}</div>
+        </div>`).join('');
+      } catch {
+        el.innerHTML = '<div class="status error">Failed to load sources</div>';
+      }
+    }
+
+    async function loadSourceFilter() {
+      const sel = document.getElementById('source-filter');
+      try {
+        const res = await fetch(API + '/api/sources');
+        const data = await res.json();
+        sel.innerHTML = '<option value="">All sources</option>' +
+          data.sources.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+      } catch {}
+    }
+
+    function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+    // Init
+    loadFiles();
+    loadSourceFilter();
+  </script>
+</body>
+</html>
