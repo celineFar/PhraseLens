@@ -22,11 +22,14 @@ services:
     environment:
       DATABASE_URL: postgresql://content_search:content_search@db:5432/content_search
       DATA_DIR: /app/data
+      CHROMA_DIR: /app/chroma_data
     volumes:
       - ./data:/app/data:ro
+      - chromadata:/app/chroma_data
     depends_on:
       db:
         condition: service_healthy
 
 volumes:
   pgdata:
+  chromadata:

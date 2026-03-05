@@ -12,6 +12,7 @@ from app.ingestion.csv_parser import parse_csv
 from app.ingestion.chunker import chunk_lines
 from app.models import Source, Passage, LemmaIndex
 from app.nlp.pipeline import tokenize_and_lemmatize
+from app.nlp.embeddings import add_passages_to_chroma
 
 router = APIRouter(prefix="/api", tags=["ingestion"])
 logger = logging.getLogger(__name__)
@@ -58,6 +59,10 @@ def ingest_csv(request: IngestRequest, db: Session = Depends(get_db)):
     for batch_start in range(0, total_passages, batch_size):
         batch = passage_dicts[batch_start : batch_start + batch_size]
 
+        batch_passage_ids: list[str] = []
+        batch_texts: list[str] = []
+        batch_metadatas: list[dict] = []
+
         for p_dict in batch:
             nlp_result = tokenize_and_lemmatize(p_dict["text"])
 
@@ -72,6 +77,14 @@ def ingest_csv(request: IngestRequest, db: Session = Depends(get_db)):
             )
             db.add(passage)
             db.flush()
+
+            batch_passage_ids.append(str(passage.id))
+            batch_texts.append(p_dict["text"])
+            batch_metadatas.append({
+                "source_id": str(source.id),
+                "source_title": show_title,
+                "location_label": p_dict["location_label"] or "",
+            })
 
             # Build lemma index: group positions by lemma
             lemma_positions: dict[str, list[int]] = defaultdict(list)
@@ -89,6 +102,10 @@ def ingest_csv(request: IngestRequest, db: Session = Depends(get_db)):
                 ))
 
         db.flush()
+
+        if batch_texts:
+            add_passages_to_chroma(batch_passage_ids, batch_texts, batch_metadatas)
+
         logger.info(f"Processed {min(batch_start + batch_size, total_passages)}/{total_passages} passages")
 
     db.commit()

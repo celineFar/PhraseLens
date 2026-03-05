@@ -20,16 +20,24 @@
     .panel.active { display: block; }
 
     /* Forms */
-    .form-row { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .form-row { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
     input, select { background: #161b22; border: 1px solid #30363d; color: #e1e4e8; padding: 0.6rem 0.8rem; border-radius: 6px; font-size: 0.95rem; outline: none; }
     input:focus, select:focus { border-color: #58a6ff; }
-    input[type="text"] { flex: 1; }
-    select { min-width: 180px; }
+    input[type="text"] { flex: 1; min-width: 200px; }
+    input[type="number"] { width: 70px; }
+    select { min-width: 140px; }
     button { background: #238636; color: #fff; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-size: 0.95rem; white-space: nowrap; }
     button:hover { background: #2ea043; }
     button:disabled { opacity: 0.5; cursor: not-allowed; }
     button.secondary { background: #30363d; }
     button.secondary:hover { background: #3d444d; }
+    label { font-size: 0.85rem; color: #8b949e; display: flex; align-items: center; gap: 0.3rem; }
+
+    /* Mode toggle */
+    .mode-toggle { display: flex; border: 1px solid #30363d; border-radius: 6px; overflow: hidden; }
+    .mode-toggle button { border-radius: 0; background: #161b22; color: #8b949e; border: none; padding: 0.5rem 0.9rem; font-size: 0.85rem; }
+    .mode-toggle button.active { background: #238636; color: #fff; }
+    .mode-toggle button:hover:not(.active) { background: #1c2128; color: #e1e4e8; }
 
     /* Results */
     .status { padding: 0.8rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem; }
@@ -42,6 +50,7 @@
     .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
     .card-title { font-weight: 600; color: #f0f0f0; font-size: 0.95rem; }
     .card-badge { background: #30363d; color: #8b949e; padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.75rem; }
+    .similarity-badge { background: #1f3a1f; color: #3fb950; padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.75rem; margin-left: 0.4rem; }
     .card-text { color: #c9d1d9; font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; }
     .card-meta { color: #8b949e; font-size: 0.8rem; margin-top: 0.5rem; }
 
@@ -49,6 +58,11 @@
     .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #30363d; border-top-color: #58a6ff; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 0.4rem; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .empty { text-align: center; color: #484f58; padding: 3rem 1rem; }
+
+    /* Context window */
+    .context-block { border-top: 1px solid #30363d; margin-top: 0.6rem; padding-top: 0.6rem; }
+    .context-label { font-size: 0.75rem; color: #484f58; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem; }
+    .context-text { color: #6e7681; font-size: 0.82rem; line-height: 1.5; white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -65,10 +79,17 @@
     <div id="search" class="panel active">
       <div class="form-row">
         <input type="text" id="query" placeholder="Search for a word or phrase..." />
+        <div class="mode-toggle">
+          <button class="active" data-mode="exact">Exact</button>
+          <button data-mode="semantic">Semantic</button>
+        </div>
+        <button onclick="doSearch()">Search</button>
+      </div>
+      <div class="form-row">
         <select id="source-filter">
           <option value="">All sources</option>
         </select>
-        <button onclick="doSearch()">Search</button>
+        <label>Context: <input type="number" id="context-window" value="0" min="0" max="5" /></label>
       </div>
       <div id="search-status"></div>
       <div id="search-results"></div>
@@ -97,6 +118,7 @@
 
   <script>
     const API = '';
+    let searchMode = 'exact';
 
     // Tabs
     document.querySelectorAll('.tab').forEach(tab => {
@@ -111,6 +133,15 @@
       });
     });
 
+    // Mode toggle
+    document.querySelectorAll('.mode-toggle button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-toggle button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        searchMode = btn.dataset.mode;
+      });
+    });
+
     // Search
     document.getElementById('query').addEventListener('keydown', e => {
       if (e.key === 'Enter') doSearch();
@@ -120,13 +151,14 @@
       const query = document.getElementById('query').value.trim();
       if (!query) return;
       const sourceId = document.getElementById('source-filter').value || null;
+      const contextWindow = parseInt(document.getElementById('context-window').value) || 0;
       const statusEl = document.getElementById('search-status');
       const resultsEl = document.getElementById('search-results');
       statusEl.innerHTML = '<div class="status info"><span class="spinner"></span> Searching...</div>';
       resultsEl.innerHTML = '';
 
       try {
-        const body = { query, mode: 'exact', limit: 50 };
+        const body = { query, mode: searchMode, limit: 50, context_window: contextWindow };
         if (sourceId) body.source_id = sourceId;
         const res = await fetch(API + '/api/search', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
@@ -134,7 +166,11 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || 'Search failed');
 
-        statusEl.innerHTML = `<div class="results-info">Found <strong>${data.total}</strong> passages matching lemmas: <code>${data.lemmas.join(', ')}</code></div>`;
+        if (searchMode === 'exact') {
+          statusEl.innerHTML = `<div class="results-info">Found <strong>${data.total}</strong> passages matching lemmas: <code>${data.lemmas.join(', ')}</code></div>`;
+        } else {
+          statusEl.innerHTML = `<div class="results-info">Found <strong>${data.total}</strong> semantically similar passages</div>`;
+        }
 
         if (data.results.length === 0) {
           resultsEl.innerHTML = '<div class="empty">No results found</div>';
@@ -143,19 +179,44 @@
 
         resultsEl.innerHTML = data.results.map(r => {
           let text = escapeHtml(r.text);
-          // Highlight matching tokens
-          if (data.lemmas.length > 0) {
+
+          // Highlight matching tokens for exact mode
+          if (searchMode === 'exact' && data.lemmas && data.lemmas.length > 0) {
             data.lemmas.forEach(lemma => {
               const re = new RegExp(`\\b(${escapeRegex(lemma)}\\w*)\\b`, 'gi');
               text = text.replace(re, '<mark>$1</mark>');
             });
           }
+
+          // Similarity badge for semantic mode
+          const simBadge = r.similarity != null
+            ? `<span class="similarity-badge">${(r.similarity * 100).toFixed(1)}%</span>`
+            : '';
+
+          // Context window
+          let contextHtml = '';
+          if (r.context) {
+            if (r.context.before && r.context.before.length > 0) {
+              contextHtml += `<div class="context-block">
+                <div class="context-label">Before</div>
+                <div class="context-text">${r.context.before.map(c => escapeHtml(c.text)).join('\n---\n')}</div>
+              </div>`;
+            }
+            if (r.context.after && r.context.after.length > 0) {
+              contextHtml += `<div class="context-block">
+                <div class="context-label">After</div>
+                <div class="context-text">${r.context.after.map(c => escapeHtml(c.text)).join('\n---\n')}</div>
+              </div>`;
+            }
+          }
+
           return `<div class="card">
             <div class="card-header">
-              <span class="card-title">${escapeHtml(r.source.title)}</span>
+              <span class="card-title">${escapeHtml(r.source.title)}${simBadge}</span>
               <span class="card-badge">${escapeHtml(r.location_label)}</span>
             </div>
             <div class="card-text">${text}</div>
+            ${contextHtml}
           </div>`;
         }).join('');
       } catch (err) {

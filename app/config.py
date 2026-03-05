@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     data_dir: str = "./data"
     chunk_size: int = 5  # number of lines per passage
     spacy_model: str = "en_core_web_sm"
+    embedding_model: str = "all-MiniLM-L6-v2"
+    chroma_dir: str = "./chroma_data"
 
     model_config = {"env_file": ".env"}
 

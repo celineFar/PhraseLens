@@ -8,6 +8,7 @@ from fastapi.responses import RedirectResponse
 from app.database import init_db, SessionLocal
 from app.api import search, sources, ingest
 from app.ingestion.ingest_all import ingest_all
+from app.scripts.backfill_embeddings import backfill
 
 logging.basicConfig(level=logging.INFO)
 
@@ -39,6 +40,8 @@ def on_startup():
         ingest_all(db)
     finally:
         db.close()
+    # Backfill embeddings for any passages not yet in ChromaDB
+    backfill()
 
 
 @app.get("/health")

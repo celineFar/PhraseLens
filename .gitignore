@@ -21,6 +21,9 @@ venv/
 # Docker
 pgdata/
 
+# ChromaDB
+chroma_data/
+
 # Logs
 *.log
 
