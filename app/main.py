@@ -1,4 +1,5 @@
 import logging
+import threading
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -40,8 +41,8 @@ def on_startup():
         ingest_all(db)
     finally:
         db.close()
-    # Backfill embeddings for any passages not yet in ChromaDB
-    backfill()
+    # Backfill embeddings in background so the API starts immediately
+    threading.Thread(target=backfill, daemon=True).start()
 
 
 @app.get("/health")

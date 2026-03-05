@@ -53,7 +53,7 @@ def add_passages_to_chroma(
     """Embed and store passages in ChromaDB."""
     collection = get_collection()
     embeddings = embed_texts(texts)
-    collection.add(
+    collection.upsert(
         ids=passage_ids,
         embeddings=embeddings,
         documents=texts,
