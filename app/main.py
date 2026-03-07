@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 
 from app.database import init_db, SessionLocal
-from app.api import search, sources, ingest
+from app.api import search, sources, ingest, collocations
 from app.ingestion.ingest_all import ingest_all
 from app.scripts.backfill_embeddings import backfill
 
@@ -22,6 +22,7 @@ app = FastAPI(
 app.include_router(search.router)
 app.include_router(sources.router)
 app.include_router(ingest.router)
+app.include_router(collocations.router)
 
 # Serve the UI
 static_dir = Path(__file__).parent / "static"

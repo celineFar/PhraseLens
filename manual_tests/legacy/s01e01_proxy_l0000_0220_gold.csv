@@ -1,0 +1,19 @@
+episode_name,season,line_index,speaker,line,expression,expression_type,label,notes
+s01e01_proxy_l0000_0220,1,14,Joey,"Yeah, I've never been here before. Just, uh, passing through on my way to Hartford.",pass through,phrasal_verb,gold,manual_annotation
+s01e01_proxy_l0000_0220,1,18,Joey,"Hey, you mind if I sit down?",sit down,phrasal_verb,gold,manual_annotation
+s01e01_proxy_l0000_0220,1,24,Joey,So I guess I should get going.,get going,phrasal_verb,gold,manual_annotation
+s01e01_proxy_l0000_0220,1,27,Lorelai,"I'm just screwing with your mind, Joey. It's nice to meet you. Enjoy Hartford.",screw with,phrasal_verb,gold,manual_annotation
+s01e01_proxy_l0000_0220,1,53,Lorelai,Getting to know my daughter.,get to,phrasal_verb,gold,manual_annotation
+s01e01_proxy_l0000_0220,1,72,Drella,"Okay. I am a great harp player, and this is my great harp, okay. So if you're looking for someone to just be nice to the guests, get a harmonica player, or maybe some guy who whistles through his nose. Okay? Capisce?",look for,phrasal_verb,gold,manual_annotation
+s01e01_proxy_l0000_0220,1,75,Lorelai,Has the plumber attended to room four yet?,attend to,phrasal_verb,gold,manual_annotation
+s01e01_proxy_l0000_0220,1,77,Lorelai,"Hi Marco, Lorelai. Talk to me about room four. What was wrong with it?",talk to,phrasal_verb,gold,manual_annotation
+s01e01_proxy_l0000_0220,1,86,Lorelai,"Ooh, hey, have Michel look at your French paper before you go.",look at,phrasal_verb,gold,manual_annotation
+s01e01_proxy_l0000_0220,1,100,Lane,My parents set me up with the son of a business associate. He's gonna be a doctor.,set up,phrasal_verb,gold,manual_annotation
+s01e01_proxy_l0000_0220,1,104,Lane,"Well, my parents like to plan ahead.",plan ahead,phrasal_verb,gold,manual_annotation
+s01e01_proxy_l0000_0220,1,110,Lane,Don't expect me to clear it up for you.,clear up,phrasal_verb,gold,manual_annotation
+s01e01_proxy_l0000_0220,1,134,Lorelai,"Someday when we open our own inn, diabetics will line up to eat this sauce.",line up,phrasal_verb,gold,manual_annotation
+s01e01_proxy_l0000_0220,1,138,Lorelai,"All right. So, now, let's get you up and to the doctor, on three. One-two-three.",get up,phrasal_verb,gold,manual_annotation
+s01e01_proxy_l0000_0220,1,141,Sookie,Stepped on my thumb. I'm fine. On three. Okay.,step on,phrasal_verb,gold,manual_annotation
+s01e01_proxy_l0000_0220,1,178,Mrs. Kim,"KIM: Go upstairs. Tea is ready. I have muffins - no dairy, no sugar, no wheat. You have to soak them in tea to make them soft enough to bite but they're very healthy. So, how was school? None of the girls get pregnant, drop out?",drop out,phrasal_verb,gold,manual_annotation
+s01e01_proxy_l0000_0220,1,96,Rory,"When are you going to let your parents know that you listen to the evil rock music? You're an American teenager, for God's sake.",for god sake,idiom,gold,manual_annotation
+s01e01_proxy_l0000_0220,1,180,Rory,"Though come to think of it, Joanna Posner was glowing a little.",come to think of it,idiom,gold,manual_annotation

@@ -1,0 +1,11 @@
+{
+  "dataset_id": "gilmore_girls",
+  "split_id": "s01e01_proxy_l0000_0220",
+  "output_root": "manual_tests",
+  "source_csv": "data/Gilmore_Girls_Lines.csv",
+  "start_line": 0,
+  "end_line": 220,
+  "speaker_col": "Character",
+  "line_col": "Line",
+  "season_col": "Season"
+}
