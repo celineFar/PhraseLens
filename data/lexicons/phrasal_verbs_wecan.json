@@ -1,4 +1,5 @@
 {
+  "abide by" : {
     "derivatives" : [ "abides by", "abiding by", "abided by" ],
     "descriptions" : [ "to follow a rule, decision, or instruction" ],
     "examples" : [ "Ah, surely,' Maram said, `this is the time to abide by the letter of his rule?", "They promised to abide by the rules of the contest." ],
@@ -33564,3 +33565,4 @@
       }
     }
   }
+}

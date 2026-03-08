@@ -59,11 +59,11 @@ get to:  3 FPs    look at:  2 FPs  look to:  2 FPs
 have on:  2 FPs   come to:  2 FPs  have in:  2 FPs
 ```
 
-**Code location:** [run_mwe_eval.py:337-348](manual_tests/run_mwe_eval.py#L337-L348) -
+**Code location:** [run_mwe_eval.py:337-348](/manual_tests/run_mwe_eval.py#L337-L348) -
 every phrasal verb in the lexicon is tested against every line via lemma
 matching, with no filtering for syntactic role.
 
-**Code location:** [phrasal_verbs.py:105-139](app/search/mwe/phrasal_verbs.py#L105-L139) -
+**Code location:** [phrasal_verbs.py:105-139](/app/search/mwe/phrasal_verbs.py#L105-L139) -
 `_find_phrasal_verb_positions` matches purely on lemma equality within a gap
 window, with no POS tag or dependency parse validation.
 

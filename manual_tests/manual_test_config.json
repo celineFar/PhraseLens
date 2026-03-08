@@ -5,6 +5,7 @@
   "source_csv": "data/Gilmore_Girls_Lines.csv",
   "start_line": 0,
   "end_line": 220,
+  "run_label": "tested-on-pure-gold",
   "speaker_col": "Character",
   "line_col": "Line",
   "season_col": "Season"

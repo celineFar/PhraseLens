@@ -140,6 +140,7 @@ def _write_report(
     episode_name: str,
     start: int,
     end: int,
+    evaluated_line_count: int,
     gold_csv: Path,
     pred_csv: Path,
     metrics: dict,
@@ -157,6 +158,7 @@ def _write_report(
 - Source file: `{source_csv.as_posix()}`
 - Evaluated slice: `{episode_name}` (contiguous proxy episode)
 - Slice definition: `line_index` {start}-{end} ({end - start + 1} dialogue lines)
+- Prediction input lines: {evaluated_line_count} gold-covered lines only
 
 ## Files
 - Gold annotations: `{gold_csv.as_posix()}`
@@ -309,8 +311,9 @@ def main() -> None:
 
     run_ts = datetime.now(timezone.utc)
     run_id = run_ts.strftime("%Y%m%d_%H%M%S")
-    if args.run_label:
-        run_id = f"{run_id}_{_slug(args.run_label)}"
+    run_label = cfg("run_label", "")
+    if run_label:
+        run_id = f"{run_id}_{_slug(run_label)}"
     run_ts_iso = run_ts.isoformat()
 
     pred_csv = runs_dir / f"{run_id}_predictions.csv"
@@ -325,8 +328,19 @@ def main() -> None:
         cfg("line_col", "Line"),
         cfg("season_col", "Season"),
     )
-    line_map = {r["line_index"]: r["line"] for r in rows}
     gold_rows = _read_gold(gold_csv)
+    gold_line_indices = {int(r["line_index"]) for r in gold_rows}
+    slice_line_indices = {r["line_index"] for r in rows}
+    missing_gold_lines = sorted(gold_line_indices - slice_line_indices)
+    if missing_gold_lines:
+        missing_preview = ", ".join(str(i) for i in missing_gold_lines[:10])
+        raise ValueError(
+            "Gold CSV contains line_index values outside the configured slice: "
+            f"{missing_preview}"
+            + ("..." if len(missing_gold_lines) > 10 else "")
+        )
+    rows = [r for r in rows if r["line_index"] in gold_line_indices]
+    line_map = {r["line_index"]: r["line"] for r in rows}
     episode_name = split_id
 
     nlp = get_nlp()
@@ -411,6 +425,7 @@ def main() -> None:
         episode_name,
         cfg("start_line", 0),
         cfg("end_line", 220),
+        len(rows),
         gold_csv,
         pred_csv,
         metrics,
