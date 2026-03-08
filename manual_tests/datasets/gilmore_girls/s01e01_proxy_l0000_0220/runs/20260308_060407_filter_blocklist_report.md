@@ -1,8 +1,8 @@
 # MWE Evaluation Report
 
 ## Run Metadata
-- Run ID: `20260308_060634_filter_hybrid`
-- Generated at (UTC): `2026-03-08T06:06:34.472726+00:00`
+- Run ID: `20260308_060407_filter_blocklist`
+- Generated at (UTC): `2026-03-08T06:04:07.435397+00:00`
 
 ## Dataset Scope
 - Source file: `data/Gilmore_Girls_Lines.csv`
@@ -12,28 +12,28 @@
 
 ## Files
 - Gold annotations: `manual_tests/datasets/gilmore_girls/s01e01_proxy_l0000_0220/gold.csv`
-- Engine predictions: `manual_tests/datasets/gilmore_girls/s01e01_proxy_l0000_0220/runs/20260308_060634_filter_hybrid_predictions.csv`
+- Engine predictions: `manual_tests/datasets/gilmore_girls/s01e01_proxy_l0000_0220/runs/20260308_060407_filter_blocklist_predictions.csv`
 
 ## Overall Metrics
 - Gold instances: 18
-- Predicted instances: 23
+- Predicted instances: 22
 - True Positives (TP): 14
-- False Positives (FP): 9
+- False Positives (FP): 8
 - False Negatives (FN): 4
-- Precision: 0.6087
+- Precision: 0.6364
 - Recall: 0.7778
-- F1 score: 0.6829
+- F1 score: 0.7000
 
 ## By Expression Type
 ### Phrasal Verbs
 - Gold: 16
-- Predicted: 21
+- Predicted: 20
 - TP: 12
-- FP: 9
+- FP: 8
 - FN: 4
-- Precision: 0.5714
+- Precision: 0.6000
 - Recall: 0.7500
-- F1: 0.6486
+- F1: 0.6667
 
 ### Idioms
 - Gold: 2
@@ -49,7 +49,6 @@
 - line 14 | phrasal_verb | `pass on` | Yeah, I've never been here before. Just, uh, passing through on my way to Hartford.
 - line 14 | phrasal_verb | `pass on to` | Yeah, I've never been here before. Just, uh, passing through on my way to Hartford.
 - line 138 | phrasal_verb | `get on` | All right. So, now, let's get you up and to the doctor, on three. One-two-three.
-- line 138 | phrasal_verb | `get up to` | All right. So, now, let's get you up and to the doctor, on three. One-two-three.
 - line 138 | phrasal_verb | `let up` | All right. So, now, let's get you up and to the doctor, on three. One-two-three.
 - line 178 | phrasal_verb | `get out` | KIM: Go upstairs. Tea is ready. I have muffins - no dairy, no sugar, no wheat. You have to soak them in tea to make them soft enough to bite but they're very healthy. So, how was school? None of the girls get pregnant, drop out?
 - line 178 | phrasal_verb | `get out!` | KIM: Go upstairs. Tea is ready. I have muffins - no dairy, no sugar, no wheat. You have to soak them in tea to make them soft enough to bite but they're very healthy. So, how was school? None of the girls get pregnant, drop out?

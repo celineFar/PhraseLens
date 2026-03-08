@@ -139,6 +139,128 @@ def _find_phrasal_verb_positions(
     return positions
 
 
+# ---------------------------------------------------------------------------
+# PV filter strategies
+# ---------------------------------------------------------------------------
+
+# Blocklist: verb+particle combos that almost always produce FPs because they
+# are overwhelmingly used as literal prepositional constructions.
+_LITERAL_BLOCKLIST: set[tuple[str, str]] = {
+    ("go", "to"),
+    ("be", "in"),
+    ("be", "on"),
+    ("get", "to"),
+    ("come", "to"),
+    ("have", "in"),
+    ("have", "on"),
+    ("look", "to"),
+}
+
+# High-frequency verbs where dep-parse filtering is most valuable (Option 4).
+_HIGH_FREQ_VERBS: set[str] = {
+    "go", "be", "get", "come", "have", "look", "take", "make", "do", "put",
+}
+
+
+def has_phrasal_verb_dep(doc, verb_lemma: str, particle_lemmas: list[str]) -> bool:
+    """Check if *doc* contains a true phrasal verb via spaCy dependency parse.
+
+    Returns ``True`` when any token whose lemma matches *verb_lemma* has a
+    direct child with ``dep_ == "prt"`` whose lemma is in *particle_lemmas*.
+    This distinguishes genuine phrasal verbs ("give up") from prepositional
+    verbs ("go to Hartford") where the preposition heads a PP complement.
+    """
+    particle_set = {p.lower() for p in particle_lemmas}
+    for token in doc:
+        if token.lemma_.lower() == verb_lemma:
+            for child in token.children:
+                if child.dep_ == "prt" and child.lemma_.lower() in particle_set:
+                    return True
+    return False
+
+
+def filter_pv_none(doc, verb_lemma: str, particle_lemmas: list[str]) -> bool:
+    """No filtering — accept every lemma match (baseline)."""
+    return True
+
+
+def filter_pv_dep_only(doc, verb_lemma: str, particle_lemmas: list[str]) -> bool:
+    """Option 1 (current): require dep_='prt' on particle."""
+    return has_phrasal_verb_dep(doc, verb_lemma, particle_lemmas)
+
+
+def filter_pv_blocklist(doc, verb_lemma: str, particle_lemmas: list[str]) -> bool:
+    """Option 2: reject only known FP-generating combos."""
+    for p in particle_lemmas:
+        if (verb_lemma, p.lower()) in _LITERAL_BLOCKLIST:
+            return False
+    return True
+
+
+def filter_pv_dep_extended(doc, verb_lemma: str, particle_lemmas: list[str]) -> bool:
+    """Option 3: accept prt OR advmod; for prep, reject if it has a pobj child
+    and the verb is high-frequency."""
+    particle_set = {p.lower() for p in particle_lemmas}
+    for token in doc:
+        if token.lemma_.lower() != verb_lemma:
+            continue
+        for child in token.children:
+            if child.lemma_.lower() not in particle_set:
+                continue
+            if child.dep_ in ("prt", "advmod"):
+                return True
+            if child.dep_ == "prep":
+                has_pobj = any(gc.dep_ == "pobj" for gc in child.children)
+                if has_pobj and verb_lemma in _HIGH_FREQ_VERBS:
+                    continue  # reject this match, try next
+                return True
+    return False
+
+
+def filter_pv_dep_highfreq(doc, verb_lemma: str, particle_lemmas: list[str]) -> bool:
+    """Option 4: apply dep_='prt' filter only for high-frequency verbs;
+    accept all matches for other verbs."""
+    if verb_lemma not in _HIGH_FREQ_VERBS:
+        return True
+    return has_phrasal_verb_dep(doc, verb_lemma, particle_lemmas)
+
+
+def filter_pv_hybrid(doc, verb_lemma: str, particle_lemmas: list[str]) -> bool:
+    """Option 5 (recommended): accept prt/advmod always, blocklist for prep,
+    permissive fallback for everything else."""
+    particle_set = {p.lower() for p in particle_lemmas}
+
+    # Check blocklist first — fast rejection
+    for p in particle_lemmas:
+        if (verb_lemma, p.lower()) in _LITERAL_BLOCKLIST:
+            # Even blocklisted combos pass if spaCy sees a true particle
+            return has_phrasal_verb_dep(doc, verb_lemma, particle_lemmas)
+
+    # Not blocklisted — accept if dep is prt, advmod, or anything non-prep
+    for token in doc:
+        if token.lemma_.lower() != verb_lemma:
+            continue
+        for child in token.children:
+            if child.lemma_.lower() in particle_set:
+                if child.dep_ in ("prt", "advmod"):
+                    return True
+                # For non-blocklisted combos, accept even prep
+                return True
+    # Fallback: no dep relation found between verb and particle
+    # (e.g. different parse tree structure) — accept
+    return True
+
+
+PV_FILTERS = {
+    "none": filter_pv_none,
+    "dep_only": filter_pv_dep_only,
+    "blocklist": filter_pv_blocklist,
+    "dep_extended": filter_pv_dep_extended,
+    "dep_highfreq": filter_pv_dep_highfreq,
+    "hybrid": filter_pv_hybrid,
+}
+
+
 def detect_phrasal_verb(query: str) -> dict | None:
     """Check if a query matches a known phrasal verb. Returns info or None."""
     return lookup_phrasal_verb(query)

@@ -1,0 +1,12 @@
+{
+  "run_id": "20260308_060545_filter_dep_highfreq",
+  "generated_at_utc": "2026-03-08T06:05:45.246055+00:00",
+  "gold": 18,
+  "predicted": 17,
+  "tp": 12,
+  "fp": 5,
+  "fn": 6,
+  "precision": 0.705882,
+  "recall": 0.666667,
+  "f1": 0.685714
+}

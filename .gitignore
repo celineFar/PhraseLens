@@ -30,3 +30,7 @@ chroma_data/
 # OS
 Thumbs.db
 .DS_Store
+
+
+exports/
+external/

@@ -1,0 +1,12 @@
+{
+  "run_id": "20260308_060407_filter_blocklist",
+  "generated_at_utc": "2026-03-08T06:04:07.435397+00:00",
+  "gold": 18,
+  "predicted": 22,
+  "tp": 14,
+  "fp": 8,
+  "fn": 4,
+  "precision": 0.636364,
+  "recall": 0.777778,
+  "f1": 0.7
+}

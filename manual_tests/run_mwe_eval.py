@@ -20,7 +20,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from app.nlp.pipeline import get_nlp, lemmatize_query
 from app.search.mwe.idioms import _find_lemma_sequence
 from app.search.mwe.lexicon import get_phrasal_verbs
-from app.search.mwe.phrasal_verbs import _find_phrasal_verb_positions
+from app.search.mwe.phrasal_verbs import _find_phrasal_verb_positions, PV_FILTERS
 
 
 def _slug(text: str) -> str:
@@ -271,6 +271,12 @@ def main() -> None:
         default="",
         help="Optional label appended to run id, e.g. 'after_gap_fix'.",
     )
+    parser.add_argument(
+        "--pv-filter",
+        default="none",
+        choices=list(PV_FILTERS.keys()),
+        help="Phrasal verb filter strategy: " + ", ".join(PV_FILTERS.keys()),
+    )
     args = parser.parse_args()
 
     config_path = Path(args.config)
@@ -346,9 +352,11 @@ def main() -> None:
     nlp = get_nlp()
     for row in rows:
         doc = nlp(row["line"])
+        row["doc"] = doc
         row["lemmas"] = [t.lemma_.lower() for t in doc if not t.is_space and not t.is_punct]
 
     pvs = get_phrasal_verbs()
+    # TODO: deos this read all the phrasal verbs? shouldn't it be a db lookup? indexed?
     pv_by_verb = defaultdict(list)
     for canonical, pv in pvs.items():
         search_lemmas = pv.get("search_lemmas")
@@ -361,14 +369,20 @@ def main() -> None:
         max_gap = 6 if pv.get("separable") else 3
         pv_by_verb[pv["verb_lemma"]].append((canonical, search_lemmas, max_gap))
 
+    pv_filter_fn = PV_FILTERS[args.pv_filter]
     pred_rows = []
     for row in rows:
         lemmas = row["lemmas"]
+        doc = row["doc"]
         seen = set()
         for lemma in set(lemmas):
             for canonical, query_lemmas, max_gap in pv_by_verb.get(lemma, []):
                 positions = _find_phrasal_verb_positions(lemmas, query_lemmas, max_gap=max_gap)
                 if not positions:
+                    continue
+                verb_lemma = query_lemmas[0]
+                particle_lemmas = query_lemmas[1:]
+                if not pv_filter_fn(doc, verb_lemma, particle_lemmas):
                     continue
                 key = ("phrasal_verb", canonical)
                 if key in seen:

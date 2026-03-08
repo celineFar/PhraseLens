@@ -151,6 +151,82 @@ def _load_phrasal_verbs() -> dict[str, dict]:
                 }
         logger.info("Loaded/merged %d phrasal verbs from semigradsky", len(semi))
 
+    # Load external MWE supplement (DiMSUM + PARSEME-derived candidates)
+    external_path = os.path.join(
+        settings.data_dir, "lexicons", "phrasal_verbs_external_mwe.json"
+    )
+    if os.path.exists(external_path):
+        with open(external_path, "r") as f:
+            external = json.load(f)
+        added = 0
+        merged = 0
+        for phrase, data in external.items():
+            parts = phrase.split()
+            if len(parts) < 2:
+                continue
+            verb = parts[0]
+            particle = " ".join(parts[1:])
+            canonical = f"{verb} {particle}".strip()
+
+            if canonical in pv_dict:
+                merged += 1
+                continue
+
+            pv_dict[canonical] = {
+                "verb": verb,
+                "particle": particle,
+                "separable": False,
+                "derivatives": data.get("derivatives", []),
+                "definition": "; ".join(data.get("descriptions", [])),
+                "examples": data.get("examples", []),
+            }
+            added += 1
+        logger.info(
+            "Loaded external MWE supplement: %d phrases (%d added, %d already present)",
+            len(external),
+            added,
+            merged,
+        )
+
+    # Load wiktionary category supplement (broad coverage, title-only entries)
+    wiki_path = os.path.join(
+        settings.data_dir, "lexicons", "phrasal_verbs_wiktionary_category.json"
+    )
+    if os.path.exists(wiki_path):
+        with open(wiki_path, "r") as f:
+            wiki_data = json.load(f)
+
+        wiki_phrases = wiki_data.get("phrases", [])
+        added = 0
+        merged = 0
+        for phrase in wiki_phrases:
+            parts = phrase.split()
+            if len(parts) < 2:
+                continue
+            verb = parts[0]
+            particle = " ".join(parts[1:])
+            canonical = f"{verb} {particle}".strip()
+            if canonical in pv_dict:
+                merged += 1
+                continue
+
+            pv_dict[canonical] = {
+                "verb": verb,
+                "particle": particle,
+                "separable": False,
+                "derivatives": [],
+                "definition": "",
+                "examples": [],
+            }
+            added += 1
+
+        logger.info(
+            "Loaded wiktionary supplement: %d phrases (%d added, %d already present)",
+            len(wiki_phrases),
+            added,
+            merged,
+        )
+
     # Build lemma-based keys for lookup
     nlp = get_nlp()
     for pv in pv_dict.values():
