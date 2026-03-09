@@ -9,6 +9,7 @@ import hashlib
 import json
 import re
 import shutil
+import subprocess
 import sys
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -380,6 +381,63 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _run_git_command(args: list[str]) -> tuple[bool, str]:
+    try:
+        proc = subprocess.run(
+            ["git", *args],
+            cwd=PROJECT_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return False, ""
+    if proc.returncode != 0:
+        return False, ""
+    return True, proc.stdout.strip()
+
+
+def _collect_git_run_metadata(runs_dir: Path, run_id: str) -> tuple[dict, dict, list[Path]]:
+    params: dict[str, str] = {}
+    tags: dict[str, str] = {}
+    artifacts: list[Path] = []
+
+    ok, commit = _run_git_command(["rev-parse", "HEAD"])
+    if ok and commit:
+        params["git_commit"] = commit
+        tags["git_commit"] = commit
+
+    ok, short_commit = _run_git_command(["rev-parse", "--short", "HEAD"])
+    if ok and short_commit:
+        params["git_commit_short"] = short_commit
+
+    ok, branch = _run_git_command(["rev-parse", "--abbrev-ref", "HEAD"])
+    if ok and branch:
+        params["git_branch"] = branch
+        tags["git_branch"] = branch
+
+    ok, status_porcelain = _run_git_command(["status", "--porcelain"])
+    if ok:
+        git_dirty = bool(status_porcelain)
+        params["git_dirty"] = str(git_dirty).lower()
+        tags["git_dirty"] = str(git_dirty).lower()
+
+    ok, status_short = _run_git_command(["status", "--short", "--branch"])
+    if ok and status_short:
+        status_path = runs_dir / f"{run_id}_git_status.txt"
+        status_path.write_text(status_short + "\n", encoding="utf-8")
+        artifacts.append(status_path)
+
+    if params.get("git_dirty") == "true":
+        ok, diff = _run_git_command(["diff", "--no-ext-diff", "HEAD"])
+        if ok and diff:
+            diff_path = runs_dir / f"{run_id}_git_diff.patch"
+            diff_path.write_text(diff, encoding="utf-8")
+            artifacts.append(diff_path)
+
+    return params, tags, artifacts
+
+
 def _log_mlflow_run(
     enabled: bool,
     tracking_uri: str,
@@ -424,6 +482,35 @@ def _load_config(config_path: Path) -> dict:
         with config_path.open("rb") as f:
             return tomllib.load(f)
     raise ValueError("Unsupported config format. Use .toml or .json")
+
+
+def _version_key_from_gold_filename(path: Path) -> tuple:
+    stem = path.stem.lower()
+    if not stem.startswith("gold_v"):
+        return (0, [], path.name.lower())
+    suffix = stem[len("gold_v") :]
+    nums = [int(x) for x in re.findall(r"\d+", suffix)]
+    return (1, nums, path.name.lower())
+
+
+def _resolve_gold_csv(case_dir: Path, configured_gold_csv: str, output_root: Path) -> Path:
+    if configured_gold_csv:
+        gold_csv = Path(configured_gold_csv)
+    else:
+        gold_csv = case_dir / "gold.csv"
+    if gold_csv.exists():
+        return gold_csv
+
+    if not configured_gold_csv:
+        legacy = output_root / f"{case_dir.name}_gold.csv"
+        if legacy.exists():
+            return legacy
+
+    versioned = sorted(case_dir.glob("gold_v*.csv"), key=_version_key_from_gold_filename)
+    if versioned:
+        return versioned[-1]
+
+    return gold_csv
 
 
 def main() -> None:
@@ -533,18 +620,11 @@ def main() -> None:
     mlflow_experiment = cfg("mlflow_experiment", "manual_tests")
 
     configured_gold_csv = cfg("gold_csv", "")
-    if configured_gold_csv:
-        gold_csv = Path(configured_gold_csv)
-    else:
-        gold_csv = case_dir / "gold.csv"
-        if not gold_csv.exists():
-            legacy = output_root / f"{split_id}_gold.csv"
-            if legacy.exists():
-                gold_csv = legacy
+    gold_csv = _resolve_gold_csv(case_dir, configured_gold_csv, output_root)
     if not gold_csv.exists():
         raise FileNotFoundError(
             "Gold CSV not found. Provide --gold-csv or place file at "
-            f"{case_dir / 'gold.csv'}"
+            f"{case_dir / 'gold.csv'} (or a versioned file like gold_v1.csv)"
         )
 
     source_desc = f"{gold_csv.as_posix()} (gold_only)"
@@ -739,6 +819,8 @@ def main() -> None:
         },
     )
 
+    git_params, git_tags, git_artifacts = _collect_git_run_metadata(runs_dir, run_id)
+
     _log_mlflow_run(
         enabled=mlflow_enabled,
         tracking_uri=mlflow_tracking_uri,
@@ -758,6 +840,7 @@ def main() -> None:
             "gold_sha256": _sha256_file(gold_csv),
             "gold_rows": len(gold_rows),
             "config_path": config_path.as_posix(),
+            **git_params,
         },
         metrics={
             "gold": float(len(metrics["gold_set"])),
@@ -786,6 +869,7 @@ def main() -> None:
             latest_report,
             latest_metrics,
             case_dir / "run_history.csv",
+            *git_artifacts,
         ],
         tags={
             "component": "manual_tests",
@@ -794,6 +878,7 @@ def main() -> None:
             "run_id": run_id,
             "generated_at_utc": run_ts_iso,
             "run_notes": run_notes,
+            **git_tags,
         },
     )
 
