@@ -35,3 +35,6 @@ Thumbs.db
 exports/
 external/
 runs/
+# MLflow
+manual_tests/mlruns/
+mlruns/

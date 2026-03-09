@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import re
 import shutil
@@ -16,6 +17,16 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+
+try:
+    import mlflow
+except ImportError:  # pragma: no cover - optional dependency in runtime
+    mlflow = None
+
+try:
+    import tomllib
+except ImportError:  # pragma: no cover - Python < 3.11
+    tomllib = None
 
 from app.nlp.pipeline import get_nlp, lemmatize_query
 from app.search.mwe.idioms import _find_lemma_sequence
@@ -244,12 +255,14 @@ def _write_report(
     idiom_metrics: dict,
     line_map: dict[int, str],
     match_mode: str,
+    run_notes: str,
 ) -> None:
     text = f"""# MWE Evaluation Report
 
 ## Run Metadata
 - Run ID: `{run_id}`
 - Generated at (UTC): `{run_ts_iso}`
+- Run notes: `{run_notes if run_notes else "-"}` 
 
 ## Dataset Scope
 - Source: `{source_desc}`
@@ -322,34 +335,100 @@ def _write_metrics_json(path: Path, run_id: str, run_ts_iso: str, metrics: dict)
 
 def _append_run_history(path: Path, run_row: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    base_fieldnames = [
+        "run_id",
+        "generated_at_utc",
+        "dataset_id",
+        "split_id",
+        "gold",
+        "predicted",
+        "tp",
+        "fp",
+        "fn",
+        "precision",
+        "recall",
+        "f1",
+        "predictions_csv",
+        "report_md",
+        "metrics_json",
+    ]
+    extended_fieldnames = base_fieldnames + ["run_notes"]
     write_header = not path.exists()
+    fieldnames = extended_fieldnames
+    if path.exists():
+        with path.open("r", newline="", encoding="utf-8") as f:
+            reader = csv.reader(f)
+            header = next(reader, [])
+        if header:
+            if "run_notes" in header:
+                fieldnames = extended_fieldnames
+            else:
+                fieldnames = base_fieldnames
     with path.open("a", newline="", encoding="utf-8") as f:
-        fieldnames = [
-            "run_id",
-            "generated_at_utc",
-            "dataset_id",
-            "split_id",
-            "gold",
-            "predicted",
-            "tp",
-            "fp",
-            "fn",
-            "precision",
-            "recall",
-            "f1",
-            "predictions_csv",
-            "report_md",
-            "metrics_json",
-        ]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         if write_header:
             writer.writeheader()
-        writer.writerow(run_row)
+        filtered_row = {k: run_row.get(k, "") for k in fieldnames}
+        writer.writerow(filtered_row)
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _log_mlflow_run(
+    enabled: bool,
+    tracking_uri: str,
+    experiment: str,
+    run_name: str,
+    params: dict,
+    metrics: dict,
+    artifacts: list[Path],
+    tags: dict,
+) -> None:
+    if not enabled:
+        return
+    if mlflow is None:
+        raise RuntimeError(
+            "MLflow logging is enabled but mlflow is not installed. "
+            "Install dependencies from requirements.txt first."
+        )
+
+    mlflow.set_tracking_uri(tracking_uri)
+    mlflow.set_experiment(experiment)
+    with mlflow.start_run(run_name=run_name):
+        mlflow.set_tags({k: str(v) for k, v in tags.items()})
+        mlflow.log_params({k: str(v) for k, v in params.items()})
+        mlflow.log_metrics(metrics)
+        for path in artifacts:
+            if path.exists():
+                mlflow.log_artifact(path.as_posix())
+
+
+def _load_config(config_path: Path) -> dict:
+    if not config_path.exists():
+        return {}
+
+    suffix = config_path.suffix.lower()
+    if suffix == ".json":
+        return json.loads(config_path.read_text(encoding="utf-8"))
+    if suffix == ".toml":
+        if tomllib is None:
+            raise RuntimeError(
+                "TOML config requested but tomllib is unavailable in this Python runtime."
+            )
+        with config_path.open("rb") as f:
+            return tomllib.load(f)
+    raise ValueError("Unsupported config format. Use .toml or .json")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run MWE evaluation against manual gold.")
-    parser.add_argument("--config", default="manual_tests/manual_test_config.json")
+    parser.add_argument("--config", default="manual_tests/manual_test_config.toml")
     parser.add_argument("--dataset-id", default="")
     parser.add_argument("--split-id", default="")
     parser.add_argument("--output-root", default="")
@@ -375,6 +454,11 @@ def main() -> None:
         help="Optional label appended to run id, e.g. 'after_gap_fix'.",
     )
     parser.add_argument(
+        "--run-notes",
+        default="",
+        help="Optional free-text notes for this run (logged to report/history/MLflow).",
+    )
+    parser.add_argument(
         "--pv-filter",
         default="",
         help="Phrasal verb filter strategy: " + ", ".join(PV_FILTERS.keys()),
@@ -384,18 +468,34 @@ def main() -> None:
         default="",
         help="Evaluation matching mode: strict or ignore_type",
     )
+    parser.add_argument(
+        "--mlflow-mode",
+        default="",
+        help="MLflow logging mode: enabled or disabled",
+    )
+    parser.add_argument(
+        "--mlflow-tracking-uri",
+        default="",
+        help="MLflow tracking URI (default: file:<output_root>/mlruns)",
+    )
+    parser.add_argument(
+        "--mlflow-experiment",
+        default="",
+        help="MLflow experiment name",
+    )
     args = parser.parse_args()
 
     config_path = Path(args.config)
-    config = {}
-    if config_path.exists():
-        config = json.loads(config_path.read_text(encoding="utf-8"))
+    config = _load_config(config_path)
 
     def cfg(name: str, default):
         value = getattr(args, name)
         if value not in ("", None):
             return value
-        return config.get(name, default)
+        cfg_value = config.get(name, default)
+        if cfg_value in ("", None):
+            return default
+        return cfg_value
 
     output_root = Path(cfg("output_root", "manual_tests"))
     dataset_id = _slug(cfg("dataset_id", "gilmore_girls"))
@@ -412,9 +512,25 @@ def main() -> None:
     if match_mode not in ("strict", "ignore_type"):
         raise ValueError("Invalid match_mode. Valid values: strict, ignore_type")
     ignore_type = match_mode == "ignore_type"
+    mlflow_mode = cfg("mlflow_mode", "auto")
+    if mlflow_mode not in ("auto", "enabled", "disabled"):
+        raise ValueError("Invalid mlflow_mode. Valid values: auto, enabled, disabled")
+    if mlflow_mode == "enabled":
+        mlflow_enabled = True
+    elif mlflow_mode == "disabled":
+        mlflow_enabled = False
+    else:
+        mlflow_enabled = mlflow is not None
+        if not mlflow_enabled:
+            print("MLflow disabled (auto mode): mlflow package is not installed.")
     case_dir = output_root / "datasets" / dataset_id / split_id
     runs_dir = case_dir / "runs"
     runs_dir.mkdir(parents=True, exist_ok=True)
+    mlflow_tracking_uri = cfg(
+        "mlflow_tracking_uri",
+        f"file:{(output_root / 'mlruns').resolve().as_posix()}",
+    )
+    mlflow_experiment = cfg("mlflow_experiment", "manual_tests")
 
     configured_gold_csv = cfg("gold_csv", "")
     if configured_gold_csv:
@@ -438,6 +554,7 @@ def main() -> None:
     run_ts = datetime.now(timezone.utc)
     run_id = run_ts.strftime("%Y%m%d_%H%M%S")
     run_label = cfg("run_label", "")
+    run_notes = cfg("run_notes", "").strip()
     if run_label:
         run_id = f"{run_id}_{_slug(run_label)}"
     run_ts_iso = run_ts.isoformat()
@@ -445,6 +562,9 @@ def main() -> None:
     pred_csv = runs_dir / f"{run_id}_predictions.csv"
     report_md = runs_dir / f"{run_id}_report.md"
     metrics_json = runs_dir / f"{run_id}_metrics.json"
+    notes_txt = runs_dir / f"{run_id}_notes.txt"
+    if run_notes:
+        notes_txt.write_text(run_notes + "\n", encoding="utf-8")
 
     gold_rows = _read_gold(gold_csv)
     if input_mode == "gold_only":
@@ -586,6 +706,7 @@ def main() -> None:
         idiom_metrics,
         line_map,
         match_mode,
+        run_notes,
     )
     _write_metrics_json(metrics_json, run_id, run_ts_iso, metrics)
 
@@ -614,6 +735,65 @@ def main() -> None:
             "predictions_csv": pred_csv.as_posix(),
             "report_md": report_md.as_posix(),
             "metrics_json": metrics_json.as_posix(),
+            "run_notes": run_notes,
+        },
+    )
+
+    _log_mlflow_run(
+        enabled=mlflow_enabled,
+        tracking_uri=mlflow_tracking_uri,
+        experiment=mlflow_experiment,
+        run_name=run_id,
+        params={
+            "dataset_id": dataset_id,
+            "split_id": split_id,
+            "input_mode": input_mode,
+            "pv_filter": pv_filter,
+            "match_mode": match_mode,
+            "run_label": run_label,
+            "run_notes": run_notes,
+            "mlflow_mode": mlflow_mode,
+            "source_desc": source_desc,
+            "gold_csv": gold_csv.as_posix(),
+            "gold_sha256": _sha256_file(gold_csv),
+            "gold_rows": len(gold_rows),
+            "config_path": config_path.as_posix(),
+        },
+        metrics={
+            "gold": float(len(metrics["gold_set"])),
+            "predicted": float(len(metrics["pred_set"])),
+            "tp": float(len(metrics["tp"])),
+            "fp": float(len(metrics["fp"])),
+            "fn": float(len(metrics["fn"])),
+            "precision": float(metrics["precision"]),
+            "recall": float(metrics["recall"]),
+            "f1": float(metrics["f1"]),
+            "pv_precision_strict": float(pv_metrics["precision"]),
+            "pv_recall_strict": float(pv_metrics["recall"]),
+            "pv_f1_strict": float(pv_metrics["f1"]),
+            "idiom_precision_strict": float(idiom_metrics["precision"]),
+            "idiom_recall_strict": float(idiom_metrics["recall"]),
+            "idiom_f1_strict": float(idiom_metrics["f1"]),
+        },
+        artifacts=[
+            config_path,
+            gold_csv,
+            pred_csv,
+            report_md,
+            metrics_json,
+            notes_txt,
+            latest_pred,
+            latest_report,
+            latest_metrics,
+            case_dir / "run_history.csv",
+        ],
+        tags={
+            "component": "manual_tests",
+            "dataset": dataset_id,
+            "split": split_id,
+            "run_id": run_id,
+            "generated_at_utc": run_ts_iso,
+            "run_notes": run_notes,
         },
     )
 

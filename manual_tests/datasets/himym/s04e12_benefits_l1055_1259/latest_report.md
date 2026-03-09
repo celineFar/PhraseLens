@@ -1,8 +1,9 @@
 # MWE Evaluation Report
 
 ## Run Metadata
-- Run ID: `20260309_084806_gold-corrected`
-- Generated at (UTC): `2026-03-09T08:48:06.742025+00:00`
+- Run ID: `20260309_114310_gold-corrected`
+- Generated at (UTC): `2026-03-09T11:43:10.221486+00:00`
+- Run notes: `-` 
 
 ## Dataset Scope
 - Source: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold.csv (gold_only)`
@@ -13,7 +14,7 @@
 
 ## Files
 - Gold annotations: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold.csv`
-- Engine predictions: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_084806_gold-corrected_predictions.csv`
+- Engine predictions: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_114310_gold-corrected_predictions.csv`
 
 ## Overall Metrics
 - Gold instances: 29

@@ -9,3 +9,5 @@ python-dotenv==1.0.1
 pandas==2.2.3
 sentence-transformers==3.3.1
 chromadb==0.6.3
+
+mlflow==2.20.0

@@ -25,7 +25,8 @@ manual_tests/
 .venv/bin/python manual_tests/run_mwe_eval.py
 ```
 
-This uses defaults from `manual_tests/manual_test_config.json`.
+This uses defaults from `manual_tests/manual_test_config.toml`.
+(`.json` is still supported if passed via `--config`.)
 
 ## Common Options
 
@@ -36,7 +37,11 @@ This uses defaults from `manual_tests/manual_test_config.json`.
 - `--source-csv data/Gilmore_Girls_Lines.csv`
 - `--start-line 0 --end-line 220`
 - `--run-label after_gap_fix`
+- `--run-notes "changed 3 labels in gold.csv"`
 - `--pv-filter dep_extended`
+- `--mlflow-mode auto|enabled|disabled`
+- `--mlflow-tracking-uri file:manual_tests/mlruns`
+- `--mlflow-experiment manual_tests`
 
 Example:
 
@@ -56,7 +61,33 @@ Gold-only mode example (use annotated rows in `gold.csv` as evaluation input):
   --input-mode gold_only \
   --gold-csv manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold.csv \
   --match-mode ignore_type \
-  --pv-filter dep_extended
+  --pv-filter dep_extended \
+  --run-notes "gold update: corrected line 1211 expression"
+```
+
+## MLflow Tracking
+
+MLflow logging is integrated in `run_mwe_eval.py` and is enabled by default.
+
+Install dependencies:
+
+```bash
+.venv/bin/pip install -r requirements.txt
+```
+
+Run with MLflow (default local tracking dir):
+
+```bash
+.venv/bin/python manual_tests/run_mwe_eval.py \
+  --mlflow-mode auto \
+  --mlflow-tracking-uri file:manual_tests/mlruns \
+  --mlflow-experiment manual_tests
+```
+
+Open the tracking UI:
+
+```bash
+.venv/bin/mlflow ui --backend-store-uri file:manual_tests/mlruns
 ```
 
 ## Add Another Dataset/Split
