@@ -69,6 +69,8 @@ Gold-only mode example (use annotated rows in `gold.csv` as evaluation input):
 
 MLflow logging is integrated in `run_mwe_eval.py` and is enabled by default.
 
+Detailed startup/report guide: `manual_tests/MLFLOW_STARTUP_REPORT.md`.
+
 Install dependencies:
 
 ```bash
@@ -87,7 +89,21 @@ Run with MLflow (default local tracking dir):
 Open the tracking UI:
 
 ```bash
-.venv/bin/mlflow ui --backend-store-uri file:manual_tests/mlruns
+.venv/bin/mlflow ui \
+  --backend-store-uri file:/home/ubuntu/PhraseLens/manual_tests/mlruns \
+  --host 0.0.0.0 \
+  --port 5000
+```
+
+### From `.venv` (activated)
+
+```bash
+cd /home/ubuntu/PhraseLens
+source .venv/bin/activate
+mlflow ui \
+  --backend-store-uri file:/home/ubuntu/PhraseLens/manual_tests/mlruns \
+  --host 0.0.0.0 \
+  --port 5000
 ```
 
 ## Add Another Dataset/Split
