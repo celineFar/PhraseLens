@@ -1,94 +1,65 @@
 # MWE Evaluation Report
 
 ## Run Metadata
-- Run ID: `20260308_145857_filter_hybrid`
-- Generated at (UTC): `2026-03-08T14:58:57.756943+00:00`
+- Run ID: `20260309_084806_gold-corrected`
+- Generated at (UTC): `2026-03-09T08:48:06.742025+00:00`
 
 ## Dataset Scope
-- Source file: `data/himym_full_transcripts.csv`
+- Source: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold.csv (gold_only)`
 - Evaluated slice: `s04e12_benefits_l1055_1259` (contiguous proxy episode)
-- Slice definition: `line_index` 1055-1259 (205 dialogue lines)
+- Slice definition: `line_index` 1061-1259 (199 dialogue lines)
 - Prediction input lines: 26 gold-covered lines only
+- Match mode: `ignore_type` (`ignore_type` treats same expression text as correct even with different expression_type)
 
 ## Files
 - Gold annotations: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold.csv`
-- Engine predictions: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260308_145857_filter_hybrid_predictions.csv`
+- Engine predictions: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_084806_gold-corrected_predictions.csv`
 
 ## Overall Metrics
-- Gold instances: 27
-- Predicted instances: 71
-- True Positives (TP): 25
-- False Positives (FP): 46
-- False Negatives (FN): 2
-- Precision: 0.3521
-- Recall: 0.9259
-- F1 score: 0.5102
+- Gold instances: 29
+- Predicted instances: 31
+- True Positives (TP): 23
+- False Positives (FP): 8
+- False Negatives (FN): 6
+- Precision: 0.7419
+- Recall: 0.7931
+- F1 score: 0.7667
 
 ## By Expression Type
 ### Phrasal Verbs
-- Gold: 13
-- Predicted: 56
-- TP: 11
-- FP: 45
-- FN: 2
-- Precision: 0.1964
-- Recall: 0.8462
-- F1: 0.3188
+- Gold: 15
+- Predicted: 19
+- TP: 9
+- FP: 10
+- FN: 6
+- Precision: 0.4737
+- Recall: 0.6000
+- F1: 0.5294
 
 ### Idioms
 - Gold: 14
-- Predicted: 15
+- Predicted: 14
 - TP: 14
-- FP: 1
+- FP: 0
 - FN: 0
-- Precision: 0.9333
+- Precision: 1.0000
 - Recall: 1.0000
-- F1: 0.9655
+- F1: 1.0000
 
 ## Example False Positives (up to 20)
-- line 1068 | phrasal_verb | `go it` |  No, I went there yesterday... Stop it! Stop it! My God, what happens? When we were a couple, we lived together and we almost went insane.
-
-- line 1072 | phrasal_verb | `boil down to` |  I explained. I said, Madeline, every international conflict essentially boils down to sexual tension.
-
-- line 1091 | phrasal_verb | `have to` |  I was working and I had to take a leap here...reading this magazine. In... the room there.
-
-- line 1091 | phrasal_verb | `read in` |  I was working and I had to take a leap here...reading this magazine. In... the room there.
-
-- line 1093 | phrasal_verb | `be to` |  If this is a problem. You've done all the way here to read a magazine? I am willing to bet that there is a place to read this magazine at work. You know, a room with a little man on the door?
-
-- line 1093 | phrasal_verb | `have do` |  If this is a problem. You've done all the way here to read a magazine? I am willing to bet that there is a place to read this magazine at work. You know, a room with a little man on the door?
-
-- line 1116 | phrasal_verb | `sex up` |  Absolutely! Let's multitasking. Use sex to spice up the boring activities.
-
-- line 1116 | phrasal_verb | `use to` |  Absolutely! Let's multitasking. Use sex to spice up the boring activities.
-
-- line 1116 | phrasal_verb | `use up` |  Absolutely! Let's multitasking. Use sex to spice up the boring activities.
-
-- line 1116 | phrasal_verb | `used to` |  Absolutely! Let's multitasking. Use sex to spice up the boring activities.
-
-- line 1164 | phrasal_verb | `do in` |  No, it's wrong. You must learn to get it out. As we did in my kindergarten class. "The time for emotions", every Tuesday morning.
-
-- line 1164 | phrasal_verb | `get it` |  No, it's wrong. You must learn to get it out. As we did in my kindergarten class. "The time for emotions", every Tuesday morning.
-
-- line 1164 | phrasal_verb | `get out!` |  No, it's wrong. You must learn to get it out. As we did in my kindergarten class. "The time for emotions", every Tuesday morning.
-
-- line 1183 | phrasal_verb | `come on` |  Come on, Lily. Do not your Ted.
-
-- line 1191 | phrasal_verb | `do it` |  This is for the best. It was fun, but I do not want it becoming weird.
-
-- line 1204 | phrasal_verb | `be with` |  Everything was going well. I felt more and more comfortable, more confident. I could conquer the world. One morning I'm in the eighth with a magazine.
-
-- line 1209 | phrasal_verb | `take in` |  Because of your bickering roommates are always a source of conflict between you two, I wanted to help. In fact, I went to the post. I took you stamps. In about 10 000. That should be enough.
-
-- line 1209 | phrasal_verb | `want in` |  Because of your bickering roommates are always a source of conflict between you two, I wanted to help. In fact, I went to the post. I took you stamps. In about 10 000. That should be enough.
-
-- line 1209 | phrasal_verb | `want to` |  Because of your bickering roommates are always a source of conflict between you two, I wanted to help. In fact, I went to the post. I took you stamps. In about 10 000. That should be enough.
-
-- line 1211 | phrasal_verb | `take in` |  I took it in passing. It's nothing.
-
+- line 1072 | * | `boil down to` | I explained. I said, Madeline, every international conflict essentially boils down to sexual tension.
+- line 1164 | * | `get out!` | No, it's wrong. You must learn to get it out. As we did in my kindergarten class. "The time for emotions", every Tuesday morning.
+- line 1211 | * | `take in` | I took it in passing. It's nothing.
+- line 1228 | * | `sleep with` | And I went with a bang. Why did I do that? It comes perhaps my father issues, but... basically, I allowed my best friend to sleep with the girl of my dreams. I completely sabotaged. And now, I smoke. I smoke.
+- line 1229 | * | `get out` | Get out of here.
+- line 1229 | * | `get out!` | Get out of here.
+- line 1241 | * | `do better` | Thank you. I would have done well at some point.
+- line 1255 | * | `hang with` | Right. It's not like you, you know? In addition, we are friends. I want to complicate matters by committing. Hanging out with friends never works. So... you want to go eat a taco?
 
 ## Example False Negatives (up to 20)
-- line 1087 | phrasal_verb | `back together` |  You do not care what, guys? You are back together?
-
-- line 1204 | phrasal_verb | `go well` |  Everything was going well. I felt more and more comfortable, more confident. I could conquer the world. One morning I'm in the eighth with a magazine.
-
+- line 1087 | * | `back together` | You do not care what, guys? You are back together?
+- line 1178 | * | `go wrong` | No. It meant nothing. It was just a reflex when we were a couple. But I did everything go wrong.
+- line 1204 | * | `go well` | Everything was going well. I felt more and more comfortable, more confident. I could conquer the world. One morning I'm in the eighth with a magazine.
+- line 1223 | * | `sleep with` | No. This is not true, no. This is not true, no. No. Robin is all yours, man. 
+- line 1241 | * | `go there` | Thank you. I would have done well at some point.
+- line 1245 | * | `look for` | And... our little arrangement is... completed, by the way.

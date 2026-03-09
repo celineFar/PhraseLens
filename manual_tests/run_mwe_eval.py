@@ -57,33 +57,124 @@ def _read_gold(gold_csv: Path) -> list[dict]:
         return list(csv.DictReader(f))
 
 
-def _write_predictions(pred_csv: Path, rows: list[dict]) -> None:
-    pred_csv.parent.mkdir(parents=True, exist_ok=True)
-    with pred_csv.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(
-            f,
-            fieldnames=[
-                "episode_name",
-                "season",
-                "line_index",
-                "speaker",
-                "line",
-                "expression",
-                "expression_type",
-                "detector",
-            ],
+def _rows_from_gold(gold_rows: list[dict]) -> list[dict]:
+    required = {"line_index", "season", "speaker", "line"}
+    if not gold_rows:
+        return []
+    missing = required - set(gold_rows[0].keys())
+    if missing:
+        missing_str = ", ".join(sorted(missing))
+        raise ValueError(
+            "gold_only mode requires columns in gold CSV: "
+            f"line_index, season, speaker, line. Missing: {missing_str}"
         )
+    by_index: dict[int, dict] = {}
+    for row in gold_rows:
+        idx = int(row["line_index"])
+        if idx not in by_index:
+            by_index[idx] = {
+                "line_index": idx,
+                "season": row.get("season", ""),
+                "speaker": row.get("speaker", ""),
+                "line": row.get("line", ""),
+            }
+    return [by_index[i] for i in sorted(by_index)]
+
+
+def _normalize_expression(expr: str) -> str:
+    return expr.strip().lower()
+
+
+def _match_key(row: dict, ignore_type: bool) -> tuple:
+    line_index = int(row["line_index"])
+    expr = _normalize_expression(row["expression"])
+    if ignore_type:
+        return (line_index, expr)
+    return (line_index, row["expression_type"], expr)
+
+
+def _build_comparison_rows(
+    gold_rows: list[dict],
+    pred_rows: list[dict],
+    ignore_type: bool = False,
+) -> list[dict]:
+    pred_by_key = {_match_key(r, ignore_type): r for r in pred_rows}
+    gold_by_key = {_match_key(r, ignore_type): r for r in gold_rows}
+
+    rows: list[dict] = []
+
+    for gr in gold_rows:
+        key = _match_key(gr, ignore_type)
+        pred = pred_by_key.get(key)
+        out = dict(gr)
+        out["predicted"] = "yes" if pred else "no"
+        out["prediction_expression"] = pred["expression"] if pred else ""
+        out["prediction_type"] = pred["expression_type"] if pred else ""
+        out["prediction_detector"] = pred["detector"] if pred else ""
+        out["match_status"] = "tp" if pred else "fn"
+        rows.append(out)
+
+    for key, pr in pred_by_key.items():
+        if key in gold_by_key:
+            continue
+        rows.append({
+            "episode_name": pr["episode_name"],
+            "season": pr["season"],
+            "line_index": pr["line_index"],
+            "speaker": pr["speaker"],
+            "line": pr["line"],
+            "expression": "",
+            "expression_type": "",
+            "label": "",
+            "notes": "",
+            "predicted": "yes",
+            "prediction_expression": pr["expression"],
+            "prediction_type": pr["expression_type"],
+            "prediction_detector": pr["detector"],
+            "match_status": "fp",
+        })
+
+    rows.sort(
+        key=lambda r: (
+            int(r.get("line_index", 0)),
+            r.get("expression_type", ""),
+            r.get("expression", ""),
+            r.get("prediction_type", ""),
+            r.get("prediction_expression", ""),
+        )
+    )
+    return rows
+
+
+def _write_predictions(pred_csv: Path, rows: list[dict], gold_rows: list[dict]) -> None:
+    pred_csv.parent.mkdir(parents=True, exist_ok=True)
+    gold_fields = list(gold_rows[0].keys()) if gold_rows else [
+        "episode_name",
+        "season",
+        "line_index",
+        "speaker",
+        "line",
+        "expression",
+        "expression_type",
+        "label",
+        "notes",
+    ]
+    extra_fields = [
+        "predicted",
+        "prediction_expression",
+        "prediction_type",
+        "prediction_detector",
+        "match_status",
+    ]
+    with pred_csv.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=gold_fields + extra_fields)
         writer.writeheader()
         writer.writerows(rows)
 
 
-def _compute_metrics(gold_rows: list[dict], pred_rows: list[dict]) -> dict:
-    gold_set = {
-        (int(r["line_index"]), r["expression_type"], r["expression"]) for r in gold_rows
-    }
-    pred_set = {
-        (int(r["line_index"]), r["expression_type"], r["expression"]) for r in pred_rows
-    }
+def _compute_metrics(gold_rows: list[dict], pred_rows: list[dict], ignore_type: bool = False) -> dict:
+    gold_set = {_match_key(r, ignore_type) for r in gold_rows}
+    pred_set = {_match_key(r, ignore_type) for r in pred_rows}
     tp = gold_set & pred_set
     fp = pred_set - gold_set
     fn = gold_set - pred_set
@@ -125,7 +216,12 @@ def _compute_type_metrics(gold_set: set, pred_set: set, expr_type: str) -> dict:
 
 def _format_items(items: set[tuple], line_map: dict[int, str], limit: int = 20) -> str:
     out = []
-    for line_index, expr_type, expr in sorted(items)[:limit]:
+    for item in sorted(items)[:limit]:
+        if len(item) == 3:
+            line_index, expr_type, expr = item
+        else:
+            line_index, expr = item
+            expr_type = "*"
         out.append(
             f"- line {line_index} | {expr_type} | `{expr}` | {line_map.get(line_index, '')}"
         )
@@ -136,10 +232,10 @@ def _write_report(
     report_path: Path,
     run_id: str,
     run_ts_iso: str,
-    source_csv: Path,
+    source_desc: str,
     episode_name: str,
-    start: int,
-    end: int,
+    start: int | None,
+    end: int | None,
     evaluated_line_count: int,
     gold_csv: Path,
     pred_csv: Path,
@@ -147,6 +243,7 @@ def _write_report(
     pv_metrics: dict,
     idiom_metrics: dict,
     line_map: dict[int, str],
+    match_mode: str,
 ) -> None:
     text = f"""# MWE Evaluation Report
 
@@ -155,10 +252,11 @@ def _write_report(
 - Generated at (UTC): `{run_ts_iso}`
 
 ## Dataset Scope
-- Source file: `{source_csv.as_posix()}`
+- Source: `{source_desc}`
 - Evaluated slice: `{episode_name}` (contiguous proxy episode)
-- Slice definition: `line_index` {start}-{end} ({end - start + 1} dialogue lines)
+- Slice definition: `line_index` {start}-{end} ({(end - start + 1) if (start is not None and end is not None) else "N/A"} dialogue lines)
 - Prediction input lines: {evaluated_line_count} gold-covered lines only
+- Match mode: `{match_mode}` (`ignore_type` treats same expression text as correct even with different expression_type)
 
 ## Files
 - Gold annotations: `{gold_csv.as_posix()}`
@@ -257,6 +355,11 @@ def main() -> None:
     parser.add_argument("--output-root", default="")
     parser.add_argument("--source-csv", default="")
     parser.add_argument(
+        "--input-mode",
+        default="",
+        help="Use full transcript slice ('transcript') or use gold.csv lines directly ('gold_only').",
+    )
+    parser.add_argument(
         "--gold-csv",
         default="",
         help="Optional explicit gold CSV path. If omitted, uses structured default.",
@@ -273,9 +376,13 @@ def main() -> None:
     )
     parser.add_argument(
         "--pv-filter",
-        default="none",
-        choices=list(PV_FILTERS.keys()),
+        default="",
         help="Phrasal verb filter strategy: " + ", ".join(PV_FILTERS.keys()),
+    )
+    parser.add_argument(
+        "--match-mode",
+        default="",
+        help="Evaluation matching mode: strict or ignore_type",
     )
     args = parser.parse_args()
 
@@ -293,16 +400,25 @@ def main() -> None:
     output_root = Path(cfg("output_root", "manual_tests"))
     dataset_id = _slug(cfg("dataset_id", "gilmore_girls"))
     split_id = _slug(cfg("split_id", "s01e01_proxy_l0000_0220"))
+    input_mode = cfg("input_mode", "transcript")
+    if input_mode not in ("transcript", "gold_only"):
+        raise ValueError("Invalid input_mode. Valid values: transcript, gold_only")
+    pv_filter = cfg("pv_filter", "none")
+    if pv_filter not in PV_FILTERS:
+        raise ValueError(
+            f"Invalid pv_filter: {pv_filter}. Valid values: {', '.join(PV_FILTERS.keys())}"
+        )
+    match_mode = cfg("match_mode", "strict")
+    if match_mode not in ("strict", "ignore_type"):
+        raise ValueError("Invalid match_mode. Valid values: strict, ignore_type")
+    ignore_type = match_mode == "ignore_type"
     case_dir = output_root / "datasets" / dataset_id / split_id
     runs_dir = case_dir / "runs"
     runs_dir.mkdir(parents=True, exist_ok=True)
 
-    source_csv = Path(cfg("source_csv", "data/Gilmore_Girls_Lines.csv"))
-    if not source_csv.exists():
-        raise FileNotFoundError(f"Source CSV not found: {source_csv}")
-
-    if args.gold_csv:
-        gold_csv = Path(args.gold_csv)
+    configured_gold_csv = cfg("gold_csv", "")
+    if configured_gold_csv:
+        gold_csv = Path(configured_gold_csv)
     else:
         gold_csv = case_dir / "gold.csv"
         if not gold_csv.exists():
@@ -315,6 +431,10 @@ def main() -> None:
             f"{case_dir / 'gold.csv'}"
         )
 
+    source_desc = f"{gold_csv.as_posix()} (gold_only)"
+    start = None
+    end = None
+
     run_ts = datetime.now(timezone.utc)
     run_id = run_ts.strftime("%Y%m%d_%H%M%S")
     run_label = cfg("run_label", "")
@@ -326,15 +446,28 @@ def main() -> None:
     report_md = runs_dir / f"{run_id}_report.md"
     metrics_json = runs_dir / f"{run_id}_metrics.json"
 
-    rows = _read_slice(
-        source_csv,
-        cfg("start_line", 0),
-        cfg("end_line", 220),
-        cfg("speaker_col", "Character"),
-        cfg("line_col", "Line"),
-        cfg("season_col", "Season"),
-    )
     gold_rows = _read_gold(gold_csv)
+    if input_mode == "gold_only":
+        rows = _rows_from_gold(gold_rows)
+        if rows:
+            start = min(r["line_index"] for r in rows)
+            end = max(r["line_index"] for r in rows)
+    else:
+        source_csv = Path(cfg("source_csv", "data/Gilmore_Girls_Lines.csv"))
+        if not source_csv.exists():
+            raise FileNotFoundError(f"Source CSV not found: {source_csv}")
+        start = cfg("start_line", 0)
+        end = cfg("end_line", 220)
+        rows = _read_slice(
+            source_csv,
+            start,
+            end,
+            cfg("speaker_col", "Character"),
+            cfg("line_col", "Line"),
+            cfg("season_col", "Season"),
+        )
+        source_desc = source_csv.as_posix()
+
     gold_line_indices = {int(r["line_index"]) for r in gold_rows}
     slice_line_indices = {r["line_index"] for r in rows}
     missing_gold_lines = sorted(gold_line_indices - slice_line_indices)
@@ -369,7 +502,7 @@ def main() -> None:
         max_gap = 6 if pv.get("separable") else 3
         pv_by_verb[pv["verb_lemma"]].append((canonical, search_lemmas, max_gap))
 
-    pv_filter_fn = PV_FILTERS[args.pv_filter]
+    pv_filter_fn = PV_FILTERS[pv_filter]
     pred_rows = []
     for row in rows:
         lemmas = row["lemmas"]
@@ -427,18 +560,24 @@ def main() -> None:
         seen.add(key)
         unique.append(row)
 
-    _write_predictions(pred_csv, unique)
-    metrics = _compute_metrics(gold_rows, unique)
-    pv_metrics = _compute_type_metrics(metrics["gold_set"], metrics["pred_set"], "phrasal_verb")
-    idiom_metrics = _compute_type_metrics(metrics["gold_set"], metrics["pred_set"], "idiom")
+    comparison_rows = _build_comparison_rows(gold_rows, unique, ignore_type=ignore_type)
+    _write_predictions(pred_csv, comparison_rows, gold_rows)
+    metrics = _compute_metrics(gold_rows, unique, ignore_type=ignore_type)
+    strict_metrics = _compute_metrics(gold_rows, unique, ignore_type=False)
+    pv_metrics = _compute_type_metrics(
+        strict_metrics["gold_set"], strict_metrics["pred_set"], "phrasal_verb"
+    )
+    idiom_metrics = _compute_type_metrics(
+        strict_metrics["gold_set"], strict_metrics["pred_set"], "idiom"
+    )
     _write_report(
         report_md,
         run_id,
         run_ts_iso,
-        source_csv,
+        source_desc,
         episode_name,
-        cfg("start_line", 0),
-        cfg("end_line", 220),
+        start,
+        end,
         len(rows),
         gold_csv,
         pred_csv,
@@ -446,6 +585,7 @@ def main() -> None:
         pv_metrics,
         idiom_metrics,
         line_map,
+        match_mode,
     )
     _write_metrics_json(metrics_json, run_id, run_ts_iso, metrics)
 

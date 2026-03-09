@@ -1,12 +1,10 @@
 {
-  "dataset_id": "gilmore_girls",
-  "split_id": "s01e01_proxy_l0000_0220",
+  "dataset_id": "himym",
+  "split_id": "s04e12_benefits_l1055_1259",
   "output_root": "manual_tests",
-  "source_csv": "data/Gilmore_Girls_Lines.csv",
-  "start_line": 0,
-  "end_line": 220,
-  "run_label": "tested-on-pure-gold",
-  "speaker_col": "Character",
-  "line_col": "Line",
-  "season_col": "Season"
+  "input_mode": "gold_only",
+  "gold_csv": "manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold.csv",
+  "run_label": "gold-corrected",
+  "pv_filter": "dep_extended",
+  "match_mode": "ignore_type"
 }
