@@ -2,9 +2,20 @@
   "dataset_id": "himym",
   "split_id": "s04e12_benefits_l1055_1259",
   "output_root": "manual_tests",
+  "source_csv": "",
   "input_mode": "gold_only",
   "gold_csv": "manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold.csv",
+  "start_line": "",
+  "end_line": "",
+  "speaker_col": "",
+  "line_col": "",
+  "season_col": "",
   "run_label": "gold-corrected",
+  "run_notes": "",
   "pv_filter": "dep_extended",
-  "match_mode": "ignore_type"
+  "match_mode": "ignore_type",
+  "mlflow_mode": "auto",
+  "mlflow_tracking_uri": "",
+  "mlflow_experiment": "manual_tests",
+  "config": ""
 }
