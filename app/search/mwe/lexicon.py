@@ -73,12 +73,17 @@ def _load_idioms() -> dict[str, dict]:
 
     # Build lemmatized keys so lemma fallback works for plurals etc.
     nlp = get_nlp()
-    lemma_additions: dict[str, dict] = {}
+    valid_entries = []
+    phrases = []
     for entry in entries:
         phrase = entry.get("phrase", "")
         if not phrase:
             continue
-        doc = nlp(phrase)
+        valid_entries.append(entry)
+        phrases.append(phrase)
+
+    lemma_additions: dict[str, dict] = {}
+    for entry, phrase, doc in zip(valid_entries, phrases, nlp.pipe(phrases, batch_size=256)):
         lemma_key = " ".join(
             t.lemma_.lower() for t in doc if not t.is_space and not t.is_punct
         )
