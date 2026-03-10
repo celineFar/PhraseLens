@@ -214,10 +214,30 @@ def _normalize_expression(expr: str) -> str:
     return re.sub(r"[^a-z0-9 ]+", "", expr.strip().lower()).strip()
 
 
-def _build_idiom_candidates(lookup: dict[str, dict], nlp) -> dict[str, list[tuple[str, list[str]]]]:
+def _extract_verb_lemmas(doc) -> list[str]:
+    """Return unique verb lemmas from a pattern/query doc."""
+    seen = set()
+    verb_lemmas = []
+    for token in doc:
+        if token.is_space or token.is_punct:
+            continue
+        if token.pos_ not in {"VERB", "AUX"}:
+            continue
+        lemma = token.lemma_.lower()
+        if not lemma or lemma in seen:
+            continue
+        seen.add(lemma)
+        verb_lemmas.append(lemma)
+    return verb_lemmas
+
+
+def _build_idiom_candidates(
+    lookup: dict[str, dict],
+    nlp,
+) -> dict[str, list[tuple[str, list[str], list[str]]]]:
     """Index idiom patterns by first lemma for lexicon-driven evaluation."""
-    idiom_by_first_lemma: dict[str, list[tuple[str, list[str]]]] = defaultdict(list)
-    seen: set[tuple[str, tuple[str, ...]]] = set()
+    idiom_by_first_lemma: dict[str, list[tuple[str, list[str], list[str]]]] = defaultdict(list)
+    seen: set[tuple[str, tuple[str, ...], tuple[str, ...]]] = set()
     unique_entries = list({id(entry): entry for entry in lookup.values()}.values())
     logger.info(
         "Building idiom candidate index from %d unique entries (%d lookup keys)",
@@ -244,19 +264,20 @@ def _build_idiom_candidates(lookup: dict[str, dict], nlp) -> dict[str, list[tupl
                     for token in doc
                     if not token.is_space and not token.is_punct
                 ]
-                pattern_lemmas.append((pattern, query_lemmas))
+                verb_lemmas = _extract_verb_lemmas(doc)
+                pattern_lemmas.append((pattern, query_lemmas, verb_lemmas))
             entry["_pattern_lemmas"] = pattern_lemmas
 
-        for _, query_lemmas in pattern_lemmas:
+        for _, query_lemmas, verb_lemmas in pattern_lemmas:
             if len(query_lemmas) < 2:
                 continue
 
             canonical_expr = _normalize_expression(canonical)
-            key = (canonical_expr, tuple(query_lemmas))
+            key = (canonical_expr, tuple(query_lemmas), tuple(verb_lemmas))
             if key in seen:
                 continue
             seen.add(key)
-            idiom_by_first_lemma[query_lemmas[0]].append((canonical_expr, query_lemmas))
+            idiom_by_first_lemma[query_lemmas[0]].append((canonical_expr, query_lemmas, verb_lemmas))
 
     logger.info(
         "Built idiom candidate index with %d first-lemma buckets and %d unique patterns",
@@ -316,7 +337,7 @@ def _build_idiom_index(nlp) -> dict[str, list[list]]:
     logger.info("Loaded idiom lookup with %d entries", len(idiom_lookup))
     idiom_index = _build_idiom_candidates(idiom_lookup, nlp)
     return {
-        lemma: [[expr, query_lemmas] for expr, query_lemmas in entries]
+        lemma: [[expr, query_lemmas, verb_lemmas] for expr, query_lemmas, verb_lemmas in entries]
         for lemma, entries in idiom_index.items()
     }
 
@@ -976,6 +997,7 @@ def main() -> None:
         for row in _iter_progress(rows, "Detect PVs"):
             lemmas = row["lemmas"]
             doc = row["doc"]
+            row["pv_verb_lemmas"] = set()
             seen = set()
             for lemma in set(lemmas):
                 for canonical, query_lemmas, max_gap in pv_by_verb.get(lemma, []):
@@ -990,6 +1012,7 @@ def main() -> None:
                     if key in seen:
                         continue
                     seen.add(key)
+                    row["pv_verb_lemmas"].add(verb_lemma)
                     pred_rows.append({
                         "episode_name": episode_name,
                         "season": row["season"],
@@ -1011,15 +1034,20 @@ def main() -> None:
         )
     with _timed_step(f"Detect idioms across {len(rows)} rows"):
         idiom_start_count = len(pred_rows)
+        idiom_suppressed_by_pv = 0
         for row in _iter_progress(rows, "Detect idioms"):
             lemmas = row["lemmas"]
+            pv_verb_lemmas = row.get("pv_verb_lemmas", set())
             seen = set()
             for lemma in set(lemmas):
-                for expr, query_lemmas in idiom_by_first_lemma.get(lemma, []):
+                for expr, query_lemmas, verb_lemmas in idiom_by_first_lemma.get(lemma, []):
                     key = ("idiom", expr)
                     if key in seen:
                         continue
                     if not _find_lemma_sequence(lemmas, query_lemmas):
+                        continue
+                    if pv_verb_lemmas and set(verb_lemmas) & pv_verb_lemmas:
+                        idiom_suppressed_by_pv += 1
                         continue
                     seen.add(key)
                     pred_rows.append({
@@ -1035,6 +1063,10 @@ def main() -> None:
         logger.info(
             "Collected %d raw idiom predictions",
             len(pred_rows) - idiom_start_count,
+        )
+        logger.info(
+            "Suppressed %d idiom candidates due to phrasal-verb verb overlap",
+            idiom_suppressed_by_pv,
         )
 
     with _timed_step("Deduplicate predictions"):
