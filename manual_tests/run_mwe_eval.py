@@ -7,13 +7,16 @@ import argparse
 import csv
 import hashlib
 import json
+import logging
 import re
 import shutil
 import subprocess
 import sys
+import time
 from collections import defaultdict
-from pathlib import Path
+from contextlib import contextmanager
 from datetime import datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -30,10 +33,44 @@ try:
 except ImportError:  # pragma: no cover - Python < 3.11
     tomllib = None
 
+try:
+    from tqdm import tqdm
+except ImportError:  # pragma: no cover - optional dependency in runtime
+    tqdm = None
+
 from app.nlp.pipeline import get_nlp, lemmatize_query
 from app.search.mwe.idioms import _find_lemma_sequence
-from app.search.mwe.lexicon import get_phrasal_verbs
+from app.search.mwe.lexicon import get_idiom_lookup, get_phrasal_verbs
 from app.search.mwe.phrasal_verbs import _find_phrasal_verb_positions, PV_FILTERS
+
+
+logger = logging.getLogger(__name__)
+
+
+def _configure_logging() -> None:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(message)s",
+        datefmt="%H:%M:%S",
+    )
+
+
+@contextmanager
+def _timed_step(label: str):
+    start = time.perf_counter()
+    logger.info("%s started", label)
+    try:
+        yield
+    finally:
+        elapsed = time.perf_counter() - start
+        logger.info("%s finished in %.2fs", label, elapsed)
+
+
+def _iter_progress(items, desc: str):
+    if tqdm is None:
+        return items
+    total = len(items) if hasattr(items, "__len__") else None
+    return tqdm(items, desc=desc, total=total, unit="item")
 
 
 def _slug(text: str) -> str:
@@ -95,7 +132,44 @@ def _rows_from_gold(gold_rows: list[dict]) -> list[dict]:
 
 
 def _normalize_expression(expr: str) -> str:
-    return expr.strip().lower()
+    return re.sub(r"[^a-z0-9 ]+", "", expr.strip().lower()).strip()
+
+
+def _build_idiom_candidates() -> dict[str, list[tuple[str, list[str]]]]:
+    """Index idiom patterns by first lemma for lexicon-driven evaluation."""
+    idiom_by_first_lemma: dict[str, list[tuple[str, list[str]]]] = defaultdict(list)
+    seen: set[tuple[str, tuple[str, ...]]] = set()
+
+    lookup = get_idiom_lookup()
+    logger.info("Building idiom candidate index from %d lookup entries", len(lookup))
+    for entry in _iter_progress(list(lookup.values()), "Build idiom index"):
+        canonical = (entry.get("canonical_form") or "").strip()
+        if not canonical:
+            continue
+
+        patterns = entry.get("patterns") or [canonical]
+        for pattern in patterns:
+            pattern = (pattern or "").strip()
+            if not pattern:
+                continue
+
+            query_lemmas = lemmatize_query(pattern)
+            if len(query_lemmas) < 2:
+                continue
+
+            canonical_expr = _normalize_expression(canonical)
+            key = (canonical_expr, tuple(query_lemmas))
+            if key in seen:
+                continue
+            seen.add(key)
+            idiom_by_first_lemma[query_lemmas[0]].append((canonical_expr, query_lemmas))
+
+    logger.info(
+        "Built idiom candidate index with %d first-lemma buckets and %d unique patterns",
+        len(idiom_by_first_lemma),
+        len(seen),
+    )
+    return idiom_by_first_lemma
 
 
 def _match_key(row: dict, ignore_type: bool) -> tuple:
@@ -515,6 +589,7 @@ def _resolve_gold_csv(case_dir: Path, configured_gold_csv: str, output_root: Pat
 
 
 def main() -> None:
+    _configure_logging()
     parser = argparse.ArgumentParser(description="Run MWE evaluation against manual gold.")
     parser.add_argument("--config", default="manual_tests/manual_test_config.toml")
     parser.add_argument("--dataset-id", default="")
@@ -634,6 +709,7 @@ def main() -> None:
 
     run_ts = datetime.now(ZoneInfo("Asia/Yerevan"))
     run_id = run_ts.strftime("%Y-%m-%d_%H-%M-%S")
+    # run_id = run_ts.strftime("%Y%m%d_%H%M%S")
     run_label = cfg("run_label", "")
     run_notes = cfg("run_notes", "").strip()
     if run_label:
@@ -647,27 +723,38 @@ def main() -> None:
     if run_notes:
         notes_txt.write_text(run_notes + "\n", encoding="utf-8")
 
-    gold_rows = _read_gold(gold_csv)
-    if input_mode == "gold_only":
-        rows = _rows_from_gold(gold_rows)
-        if rows:
-            start = min(r["line_index"] for r in rows)
-            end = max(r["line_index"] for r in rows)
-    else:
-        source_csv = Path(cfg("source_csv", "data/Gilmore_Girls_Lines.csv"))
-        if not source_csv.exists():
-            raise FileNotFoundError(f"Source CSV not found: {source_csv}")
-        start = cfg("start_line", 0)
-        end = cfg("end_line", 220)
-        rows = _read_slice(
-            source_csv,
-            start,
-            end,
-            cfg("speaker_col", "Character"),
-            cfg("line_col", "Line"),
-            cfg("season_col", "Season"),
-        )
-        source_desc = source_csv.as_posix()
+    logger.info(
+        "Starting MWE eval run_id=%s dataset=%s split=%s input_mode=%s pv_filter=%s match_mode=%s",
+        run_id,
+        dataset_id,
+        split_id,
+        input_mode,
+        pv_filter,
+        match_mode,
+    )
+
+    with _timed_step("Load gold/input rows"):
+        gold_rows = _read_gold(gold_csv)
+        if input_mode == "gold_only":
+            rows = _rows_from_gold(gold_rows)
+            if rows:
+                start = min(r["line_index"] for r in rows)
+                end = max(r["line_index"] for r in rows)
+        else:
+            source_csv = Path(cfg("source_csv", "data/Gilmore_Girls_Lines.csv"))
+            if not source_csv.exists():
+                raise FileNotFoundError(f"Source CSV not found: {source_csv}")
+            start = cfg("start_line", 0)
+            end = cfg("end_line", 220)
+            rows = _read_slice(
+                source_csv,
+                start,
+                end,
+                cfg("speaker_col", "Character"),
+                cfg("line_col", "Line"),
+                cfg("season_col", "Season"),
+            )
+            source_desc = source_csv.as_posix()
 
     gold_line_indices = {int(r["line_index"]) for r in gold_rows}
     slice_line_indices = {r["line_index"] for r in rows}
@@ -682,205 +769,245 @@ def main() -> None:
     rows = [r for r in rows if r["line_index"] in gold_line_indices]
     line_map = {r["line_index"]: r["line"] for r in rows}
     episode_name = split_id
+    logger.info(
+        "Loaded %d gold rows, %d input rows after slice filter, %d unique gold line indices",
+        len(gold_rows),
+        len(rows),
+        len(gold_line_indices),
+    )
 
-    nlp = get_nlp()
-    for row in rows:
-        doc = nlp(row["line"])
-        row["doc"] = doc
-        row["lemmas"] = [t.lemma_.lower() for t in doc if not t.is_space and not t.is_punct]
+    with _timed_step("Load spaCy pipeline"):
+        nlp = get_nlp()
+    with _timed_step(f"Parse and lemmatize {len(rows)} rows"):
+        for row in _iter_progress(rows, "Parse rows"):
+            doc = nlp(row["line"])
+            row["doc"] = doc
+            row["lemmas"] = [t.lemma_.lower() for t in doc if not t.is_space and not t.is_punct]
 
-    pvs = get_phrasal_verbs()
-    # TODO: deos this read all the phrasal verbs? shouldn't it be a db lookup? indexed?
-    pv_by_verb = defaultdict(list)
-    for canonical, pv in pvs.items():
-        search_lemmas = pv.get("search_lemmas")
-        if not search_lemmas:
-            particle_tokens = (pv.get("particle") or "").split()
-            if particle_tokens and pv.get("verb_lemma"):
-                search_lemmas = [pv["verb_lemma"]] + particle_tokens
-        if not search_lemmas or len(search_lemmas) < 2:
-            continue
-        max_gap = 6 if pv.get("separable") else 3
-        pv_by_verb[pv["verb_lemma"]].append((canonical, search_lemmas, max_gap))
+    with _timed_step("Load phrasal verb lexicon"):
+        pvs = get_phrasal_verbs()
+    with _timed_step("Build phrasal verb index"):
+        pv_by_verb = defaultdict(list)
+        for canonical, pv in _iter_progress(list(pvs.items()), "Build PV index"):
+            search_lemmas = pv.get("search_lemmas")
+            if not search_lemmas:
+                particle_tokens = (pv.get("particle") or "").split()
+                if particle_tokens and pv.get("verb_lemma"):
+                    search_lemmas = [pv["verb_lemma"]] + particle_tokens
+            if not search_lemmas or len(search_lemmas) < 2:
+                continue
+            max_gap = 6 if pv.get("separable") else 3
+            pv_by_verb[pv["verb_lemma"]].append((canonical, search_lemmas, max_gap))
+        logger.info(
+            "Built PV index with %d canonical entries across %d verb buckets",
+            len(pvs),
+            len(pv_by_verb),
+        )
 
     pv_filter_fn = PV_FILTERS[pv_filter]
     pred_rows = []
-    for row in rows:
-        lemmas = row["lemmas"]
-        doc = row["doc"]
+    with _timed_step(f"Detect phrasal verbs across {len(rows)} rows"):
+        for row in _iter_progress(rows, "Detect PVs"):
+            lemmas = row["lemmas"]
+            doc = row["doc"]
+            seen = set()
+            for lemma in set(lemmas):
+                for canonical, query_lemmas, max_gap in pv_by_verb.get(lemma, []):
+                    positions = _find_phrasal_verb_positions(lemmas, query_lemmas, max_gap=max_gap)
+                    if not positions:
+                        continue
+                    verb_lemma = query_lemmas[0]
+                    particle_lemmas = query_lemmas[1:]
+                    if not pv_filter_fn(doc, verb_lemma, particle_lemmas):
+                        continue
+                    key = ("phrasal_verb", canonical)
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    pred_rows.append({
+                        "episode_name": episode_name,
+                        "season": row["season"],
+                        "line_index": row["line_index"],
+                        "speaker": row["speaker"],
+                        "line": row["line"],
+                        "expression": canonical,
+                        "expression_type": "phrasal_verb",
+                        "detector": "engine_phrasal_verb",
+                    })
+        logger.info("Collected %d raw phrasal verb predictions", len(pred_rows))
+
+    with _timed_step("Load/build idiom candidate index"):
+        idiom_by_first_lemma = _build_idiom_candidates()
+    with _timed_step(f"Detect idioms across {len(rows)} rows"):
+        idiom_start_count = len(pred_rows)
+        for row in _iter_progress(rows, "Detect idioms"):
+            lemmas = row["lemmas"]
+            seen = set()
+            for lemma in set(lemmas):
+                for expr, query_lemmas in idiom_by_first_lemma.get(lemma, []):
+                    key = ("idiom", expr)
+                    if key in seen:
+                        continue
+                    if not _find_lemma_sequence(lemmas, query_lemmas):
+                        continue
+                    seen.add(key)
+                    pred_rows.append({
+                        "episode_name": episode_name,
+                        "season": row["season"],
+                        "line_index": row["line_index"],
+                        "speaker": row["speaker"],
+                        "line": row["line"],
+                        "expression": expr,
+                        "expression_type": "idiom",
+                        "detector": "engine_idiom",
+                    })
+        logger.info(
+            "Collected %d raw idiom predictions",
+            len(pred_rows) - idiom_start_count,
+        )
+
+    with _timed_step("Deduplicate predictions"):
+        unique = []
         seen = set()
-        for lemma in set(lemmas):
-            for canonical, query_lemmas, max_gap in pv_by_verb.get(lemma, []):
-                positions = _find_phrasal_verb_positions(lemmas, query_lemmas, max_gap=max_gap)
-                if not positions:
-                    continue
-                verb_lemma = query_lemmas[0]
-                particle_lemmas = query_lemmas[1:]
-                if not pv_filter_fn(doc, verb_lemma, particle_lemmas):
-                    continue
-                key = ("phrasal_verb", canonical)
-                if key in seen:
-                    continue
-                seen.add(key)
-                pred_rows.append({
-                    "episode_name": episode_name,
-                    "season": row["season"],
-                    "line_index": row["line_index"],
-                    "speaker": row["speaker"],
-                    "line": row["line"],
-                    "expression": canonical,
-                    "expression_type": "phrasal_verb",
-                    "detector": "engine_phrasal_verb",
-                })
+        for row in pred_rows:
+            key = (row["line_index"], row["expression_type"], row["expression"])
+            if key in seen:
+                continue
+            seen.add(key)
+            unique.append(row)
+        logger.info("Reduced %d raw predictions to %d unique predictions", len(pred_rows), len(unique))
 
-    idiom_candidates = sorted({
-        r["expression"] for r in gold_rows if r["expression_type"] == "idiom"
-    })
-    for row in rows:
-        lemmas = row["lemmas"]
-        for expr in idiom_candidates:
-            query_lemmas = lemmatize_query(expr)
-            if _find_lemma_sequence(lemmas, query_lemmas):
-                pred_rows.append({
-                    "episode_name": episode_name,
-                    "season": row["season"],
-                    "line_index": row["line_index"],
-                    "speaker": row["speaker"],
-                    "line": row["line"],
-                    "expression": expr,
-                    "expression_type": "idiom",
-                    "detector": "engine_idiom",
-                })
-
-    unique = []
-    seen = set()
-    for row in pred_rows:
-        key = (row["line_index"], row["expression_type"], row["expression"])
-        if key in seen:
-            continue
-        seen.add(key)
-        unique.append(row)
-
-    comparison_rows = _build_comparison_rows(gold_rows, unique, ignore_type=ignore_type)
-    _write_predictions(pred_csv, comparison_rows, gold_rows)
-    metrics = _compute_metrics(gold_rows, unique, ignore_type=ignore_type)
-    strict_metrics = _compute_metrics(gold_rows, unique, ignore_type=False)
-    pv_metrics = _compute_type_metrics(
-        strict_metrics["gold_set"], strict_metrics["pred_set"], "phrasal_verb"
-    )
-    idiom_metrics = _compute_type_metrics(
-        strict_metrics["gold_set"], strict_metrics["pred_set"], "idiom"
-    )
-    _write_report(
-        report_md,
-        run_id,
-        run_ts_iso,
-        source_desc,
-        episode_name,
-        start,
-        end,
-        len(rows),
-        gold_csv,
-        pred_csv,
-        metrics,
-        pv_metrics,
-        idiom_metrics,
-        line_map,
-        match_mode,
-        run_notes,
-    )
-    _write_metrics_json(metrics_json, run_id, run_ts_iso, metrics)
-
-    latest_pred = case_dir / "latest_predictions.csv"
-    latest_report = case_dir / "latest_report.md"
-    latest_metrics = case_dir / "latest_metrics.json"
-    shutil.copy2(pred_csv, latest_pred)
-    shutil.copy2(report_md, latest_report)
-    shutil.copy2(metrics_json, latest_metrics)
-
-    _append_run_history(
-        case_dir / "run_history.csv",
-        {
-            "run_id": run_id,
-            "generated_at_utc": run_ts_iso,
-            "dataset_id": dataset_id,
-            "split_id": split_id,
-            "gold": len(metrics["gold_set"]),
-            "predicted": len(metrics["pred_set"]),
-            "tp": len(metrics["tp"]),
-            "fp": len(metrics["fp"]),
-            "fn": len(metrics["fn"]),
-            "precision": f"{metrics['precision']:.6f}",
-            "recall": f"{metrics['recall']:.6f}",
-            "f1": f"{metrics['f1']:.6f}",
-            "predictions_csv": pred_csv.as_posix(),
-            "report_md": report_md.as_posix(),
-            "metrics_json": metrics_json.as_posix(),
-            "run_notes": run_notes,
-        },
-    )
-
-    git_params, git_tags, git_artifacts = _collect_git_run_metadata(runs_dir, run_id)
-
-    _log_mlflow_run(
-        enabled=mlflow_enabled,
-        tracking_uri=mlflow_tracking_uri,
-        experiment=mlflow_experiment,
-        run_name=run_id,
-        params={
-            "dataset_id": dataset_id,
-            "split_id": split_id,
-            "input_mode": input_mode,
-            "pv_filter": pv_filter,
-            "match_mode": match_mode,
-            "run_label": run_label,
-            "run_notes": run_notes,
-            "mlflow_mode": mlflow_mode,
-            "source_desc": source_desc,
-            "gold_csv": gold_csv.as_posix(),
-            "gold_sha256": _sha256_file(gold_csv),
-            "gold_rows": len(gold_rows),
-            "config_path": config_path.as_posix(),
-            **git_params,
-        },
-        metrics={
-            "gold": float(len(metrics["gold_set"])),
-            "predicted": float(len(metrics["pred_set"])),
-            "tp": float(len(metrics["tp"])),
-            "fp": float(len(metrics["fp"])),
-            "fn": float(len(metrics["fn"])),
-            "precision": float(metrics["precision"]),
-            "recall": float(metrics["recall"]),
-            "f1": float(metrics["f1"]),
-            "pv_precision_strict": float(pv_metrics["precision"]),
-            "pv_recall_strict": float(pv_metrics["recall"]),
-            "pv_f1_strict": float(pv_metrics["f1"]),
-            "idiom_precision_strict": float(idiom_metrics["precision"]),
-            "idiom_recall_strict": float(idiom_metrics["recall"]),
-            "idiom_f1_strict": float(idiom_metrics["f1"]),
-        },
-        artifacts=[
-            config_path,
+    with _timed_step("Compute metrics and write artifacts"):
+        comparison_rows = _build_comparison_rows(gold_rows, unique, ignore_type=ignore_type)
+        _write_predictions(pred_csv, comparison_rows, gold_rows)
+        metrics = _compute_metrics(gold_rows, unique, ignore_type=ignore_type)
+        strict_metrics = _compute_metrics(gold_rows, unique, ignore_type=False)
+        pv_metrics = _compute_type_metrics(
+            strict_metrics["gold_set"], strict_metrics["pred_set"], "phrasal_verb"
+        )
+        idiom_metrics = _compute_type_metrics(
+            strict_metrics["gold_set"], strict_metrics["pred_set"], "idiom"
+        )
+        _write_report(
+            report_md,
+            run_id,
+            run_ts_iso,
+            source_desc,
+            episode_name,
+            start,
+            end,
+            len(rows),
             gold_csv,
             pred_csv,
-            report_md,
-            metrics_json,
-            notes_txt,
-            latest_pred,
-            latest_report,
-            latest_metrics,
+            metrics,
+            pv_metrics,
+            idiom_metrics,
+            line_map,
+            match_mode,
+            run_notes,
+        )
+        _write_metrics_json(metrics_json, run_id, run_ts_iso, metrics)
+
+    with _timed_step("Update latest artifacts and run history"):
+        latest_pred = case_dir / "latest_predictions.csv"
+        latest_report = case_dir / "latest_report.md"
+        latest_metrics = case_dir / "latest_metrics.json"
+        shutil.copy2(pred_csv, latest_pred)
+        shutil.copy2(report_md, latest_report)
+        shutil.copy2(metrics_json, latest_metrics)
+
+        _append_run_history(
             case_dir / "run_history.csv",
-            *git_artifacts,
-        ],
-        tags={
-            "component": "manual_tests",
-            "dataset": dataset_id,
-            "split": split_id,
-            "run_id": run_id,
-            "generated_at_utc": run_ts_iso,
-            "run_notes": run_notes,
-            **git_tags,
-        },
+            {
+                "run_id": run_id,
+                "generated_at_utc": run_ts_iso,
+                "dataset_id": dataset_id,
+                "split_id": split_id,
+                "gold": len(metrics["gold_set"]),
+                "predicted": len(metrics["pred_set"]),
+                "tp": len(metrics["tp"]),
+                "fp": len(metrics["fp"]),
+                "fn": len(metrics["fn"]),
+                "precision": f"{metrics['precision']:.6f}",
+                "recall": f"{metrics['recall']:.6f}",
+                "f1": f"{metrics['f1']:.6f}",
+                "predictions_csv": pred_csv.as_posix(),
+                "report_md": report_md.as_posix(),
+                "metrics_json": metrics_json.as_posix(),
+                "run_notes": run_notes,
+            },
+        )
+
+    with _timed_step("Collect git metadata"):
+        git_params, git_tags, git_artifacts = _collect_git_run_metadata(runs_dir, run_id)
+
+    with _timed_step("Log MLflow artifacts"):
+        _log_mlflow_run(
+            enabled=mlflow_enabled,
+            tracking_uri=mlflow_tracking_uri,
+            experiment=mlflow_experiment,
+            run_name=run_id,
+            params={
+                "dataset_id": dataset_id,
+                "split_id": split_id,
+                "input_mode": input_mode,
+                "pv_filter": pv_filter,
+                "match_mode": match_mode,
+                "run_label": run_label,
+                "run_notes": run_notes,
+                "mlflow_mode": mlflow_mode,
+                "source_desc": source_desc,
+                "gold_csv": gold_csv.as_posix(),
+                "gold_sha256": _sha256_file(gold_csv),
+                "gold_rows": len(gold_rows),
+                "config_path": config_path.as_posix(),
+                **git_params,
+            },
+            metrics={
+                "gold": float(len(metrics["gold_set"])),
+                "predicted": float(len(metrics["pred_set"])),
+                "tp": float(len(metrics["tp"])),
+                "fp": float(len(metrics["fp"])),
+                "fn": float(len(metrics["fn"])),
+                "precision": float(metrics["precision"]),
+                "recall": float(metrics["recall"]),
+                "f1": float(metrics["f1"]),
+                "pv_precision_strict": float(pv_metrics["precision"]),
+                "pv_recall_strict": float(pv_metrics["recall"]),
+                "pv_f1_strict": float(pv_metrics["f1"]),
+                "idiom_precision_strict": float(idiom_metrics["precision"]),
+                "idiom_recall_strict": float(idiom_metrics["recall"]),
+                "idiom_f1_strict": float(idiom_metrics["f1"]),
+            },
+            artifacts=[
+                config_path,
+                gold_csv,
+                pred_csv,
+                report_md,
+                metrics_json,
+                notes_txt,
+                latest_pred,
+                latest_report,
+                latest_metrics,
+                case_dir / "run_history.csv",
+                *git_artifacts,
+            ],
+            tags={
+                "component": "manual_tests",
+                "dataset": dataset_id,
+                "split": split_id,
+                "run_id": run_id,
+                "generated_at_utc": run_ts_iso,
+                "run_notes": run_notes,
+                **git_tags,
+            },
+        )
+    logger.info(
+        "Run complete: precision=%.4f recall=%.4f f1=%.4f predictions=%d",
+        metrics["precision"],
+        metrics["recall"],
+        metrics["f1"],
+        len(unique),
     )
 
     print(f"Run ID: {run_id}")
