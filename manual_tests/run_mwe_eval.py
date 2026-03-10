@@ -38,7 +38,8 @@ try:
 except ImportError:  # pragma: no cover - optional dependency in runtime
     tqdm = None
 
-from app.nlp.pipeline import get_nlp, lemmatize_query
+from app.nlp.pipeline import get_nlp
+from app.config import settings
 from app.search.mwe.idioms import _find_lemma_sequence
 from app.search.mwe.lexicon import get_idiom_lookup, get_phrasal_verbs
 from app.search.mwe.phrasal_verbs import _find_phrasal_verb_positions, PV_FILTERS
@@ -53,6 +54,15 @@ def _configure_logging() -> None:
         format="%(asctime)s %(levelname)s %(message)s",
         datefmt="%H:%M:%S",
     )
+
+
+def _attach_file_logging(log_path: Path) -> None:
+    root_logger = logging.getLogger()
+    formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s", "%H:%M:%S")
+    file_handler = logging.FileHandler(log_path, encoding="utf-8")
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(formatter)
+    root_logger.addHandler(file_handler)
 
 
 @contextmanager
@@ -75,6 +85,75 @@ def _iter_progress(items, desc: str):
 
 def _slug(text: str) -> str:
     return re.sub(r"[^a-z0-9_-]+", "_", text.strip().lower()).strip("_")
+
+
+def _path_fingerprint(path: Path) -> dict:
+    if not path.exists():
+        return {"exists": False}
+    stat = path.stat()
+    return {
+        "exists": True,
+        "size": stat.st_size,
+        "mtime_ns": stat.st_mtime_ns,
+    }
+
+
+def _cache_sources_changed(payload: dict, source_paths: list[Path]) -> bool:
+    cached_sources = payload.get("sources", {})
+    current_sources = {path.as_posix(): _path_fingerprint(path) for path in source_paths}
+    return cached_sources != current_sources
+
+
+def _load_cached_index(
+    cache_path: Path,
+    source_paths: list[Path],
+    cache_name: str,
+) -> dict | None:
+    if not cache_path.exists():
+        logger.info("%s cache miss: %s does not exist", cache_name, cache_path.as_posix())
+        return None
+
+    try:
+        payload = json.loads(cache_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        logger.warning("Failed reading %s cache at %s: %s", cache_name, cache_path, exc)
+        return None
+
+    if payload.get("cache_version") != 1:
+        logger.info("%s cache miss: unsupported cache version", cache_name)
+        return None
+    if payload.get("spacy_model") != settings.spacy_model:
+        logger.info("%s cache miss: spaCy model changed", cache_name)
+        return None
+    if _cache_sources_changed(payload, source_paths):
+        logger.info("%s cache miss: source files changed", cache_name)
+        return None
+
+    index = payload.get("index")
+    if not isinstance(index, dict):
+        logger.info("%s cache miss: malformed index payload", cache_name)
+        return None
+
+    logger.info("%s cache hit: loaded %s", cache_name, cache_path.as_posix())
+    return index
+
+
+def _write_cached_index(
+    cache_path: Path,
+    source_paths: list[Path],
+    cache_name: str,
+    index: dict,
+) -> None:
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "cache_version": 1,
+        "cache_name": cache_name,
+        "spacy_model": settings.spacy_model,
+        "sources": {path.as_posix(): _path_fingerprint(path) for path in source_paths},
+        "index": index,
+    }
+    cache_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    logger.info("%s cache saved: %s", cache_name, cache_path.as_posix())
 
 
 def _read_slice(
@@ -135,25 +214,40 @@ def _normalize_expression(expr: str) -> str:
     return re.sub(r"[^a-z0-9 ]+", "", expr.strip().lower()).strip()
 
 
-def _build_idiom_candidates() -> dict[str, list[tuple[str, list[str]]]]:
+def _build_idiom_candidates(lookup: dict[str, dict], nlp) -> dict[str, list[tuple[str, list[str]]]]:
     """Index idiom patterns by first lemma for lexicon-driven evaluation."""
     idiom_by_first_lemma: dict[str, list[tuple[str, list[str]]]] = defaultdict(list)
     seen: set[tuple[str, tuple[str, ...]]] = set()
-
-    lookup = get_idiom_lookup()
-    logger.info("Building idiom candidate index from %d lookup entries", len(lookup))
-    for entry in _iter_progress(list(lookup.values()), "Build idiom index"):
+    unique_entries = list({id(entry): entry for entry in lookup.values()}.values())
+    logger.info(
+        "Building idiom candidate index from %d unique entries (%d lookup keys)",
+        len(unique_entries),
+        len(lookup),
+    )
+    for entry in _iter_progress(unique_entries, "Build idiom index"):
         canonical = (entry.get("canonical_form") or "").strip()
         if not canonical:
             continue
 
-        patterns = entry.get("patterns") or [canonical]
-        for pattern in patterns:
-            pattern = (pattern or "").strip()
-            if not pattern:
-                continue
+        pattern_lemmas = entry.get("_pattern_lemmas")
+        if pattern_lemmas is None:
+            patterns = []
+            for pattern in entry.get("patterns") or [canonical]:
+                pattern = (pattern or "").strip()
+                if pattern:
+                    patterns.append(pattern)
+            docs = nlp.pipe(patterns, batch_size=256) if patterns else []
+            pattern_lemmas = []
+            for pattern, doc in zip(patterns, docs):
+                query_lemmas = [
+                    token.lemma_.lower()
+                    for token in doc
+                    if not token.is_space and not token.is_punct
+                ]
+                pattern_lemmas.append((pattern, query_lemmas))
+            entry["_pattern_lemmas"] = pattern_lemmas
 
-            query_lemmas = lemmatize_query(pattern)
+        for _, query_lemmas in pattern_lemmas:
             if len(query_lemmas) < 2:
                 continue
 
@@ -170,6 +264,75 @@ def _build_idiom_candidates() -> dict[str, list[tuple[str, list[str]]]]:
         len(seen),
     )
     return idiom_by_first_lemma
+
+
+def _cache_dir(output_root: Path) -> Path:
+    return output_root / ".cache" / "mwe_eval"
+
+
+def _mwe_source_paths() -> dict[str, list[Path]]:
+    data_dir = Path(settings.data_dir)
+    lexicon_dir = data_dir / "lexicons"
+    code_paths = [
+        PROJECT_ROOT / "manual_tests" / "run_mwe_eval.py",
+        PROJECT_ROOT / "app" / "search" / "mwe" / "lexicon.py",
+    ]
+    return {
+        "pv_index": code_paths + [
+            lexicon_dir / "phrasal_verbs_wecan.json",
+            lexicon_dir / "phrasal_verbs_semigradsky.json",
+            lexicon_dir / "phrasal_verbs_external_mwe.json",
+            lexicon_dir / "phrasal_verbs_wiktionary_category.json",
+        ],
+        "idiom_index": code_paths + [
+            lexicon_dir / "idioms_mcgrawhill.json",
+        ],
+    }
+
+
+def _build_pv_index() -> dict[str, list[list]]:
+    pvs = get_phrasal_verbs()
+    pv_by_verb: dict[str, list[list]] = defaultdict(list)
+    for canonical, pv in _iter_progress(list(pvs.items()), "Build PV index"):
+        search_lemmas = pv.get("search_lemmas")
+        if not search_lemmas:
+            particle_tokens = (pv.get("particle") or "").split()
+            if particle_tokens and pv.get("verb_lemma"):
+                search_lemmas = [pv["verb_lemma"]] + particle_tokens
+        if not search_lemmas or len(search_lemmas) < 2:
+            continue
+        max_gap = 6 if pv.get("separable") else 3
+        pv_by_verb[pv["verb_lemma"]].append([canonical, search_lemmas, max_gap])
+    logger.info(
+        "Built PV index with %d canonical entries across %d verb buckets",
+        len(pvs),
+        len(pv_by_verb),
+    )
+    return dict(pv_by_verb)
+
+
+def _build_idiom_index(nlp) -> dict[str, list[list]]:
+    idiom_lookup = get_idiom_lookup()
+    logger.info("Loaded idiom lookup with %d entries", len(idiom_lookup))
+    idiom_index = _build_idiom_candidates(idiom_lookup, nlp)
+    return {
+        lemma: [[expr, query_lemmas] for expr, query_lemmas in entries]
+        for lemma, entries in idiom_index.items()
+    }
+
+
+def _load_or_build_index(
+    cache_path: Path,
+    source_paths: list[Path],
+    cache_name: str,
+    builder,
+) -> dict:
+    cached = _load_cached_index(cache_path, source_paths, cache_name)
+    if cached is not None:
+        return cached
+    index = builder()
+    _write_cached_index(cache_path, source_paths, cache_name, index)
+    return index
 
 
 def _match_key(row: dict, ignore_type: bool) -> tuple:
@@ -622,6 +785,11 @@ def main() -> None:
         help="Optional free-text notes for this run (logged to report/history/MLflow).",
     )
     parser.add_argument(
+        "--log-notes",
+        default="",
+        help="Optional notes describing the purpose of the runtime/timing log.",
+    )
+    parser.add_argument(
         "--pv-filter",
         default="",
         help="Phrasal verb filter strategy: " + ", ".join(PV_FILTERS.keys()),
@@ -661,6 +829,8 @@ def main() -> None:
         return cfg_value
 
     output_root = Path(cfg("output_root", "manual_tests"))
+    cache_dir = _cache_dir(output_root)
+    source_paths = _mwe_source_paths()
     dataset_id = _slug(cfg("dataset_id", "gilmore_girls"))
     split_id = _slug(cfg("split_id", "s01e01_proxy_l0000_0220"))
     input_mode = cfg("input_mode", "transcript")
@@ -712,6 +882,7 @@ def main() -> None:
     # run_id = run_ts.strftime("%Y%m%d_%H%M%S")
     run_label = cfg("run_label", "")
     run_notes = cfg("run_notes", "").strip()
+    log_notes = cfg("log_notes", "").strip()
     if run_label:
         run_id = f"{run_id}_{_slug(run_label)}"
     run_ts_iso = run_ts.isoformat()
@@ -719,9 +890,16 @@ def main() -> None:
     pred_csv = runs_dir / f"{run_id}_predictions.csv"
     report_md = runs_dir / f"{run_id}_report.md"
     metrics_json = runs_dir / f"{run_id}_metrics.json"
+    timing_log = runs_dir / f"{run_id}_timing.log"
     notes_txt = runs_dir / f"{run_id}_notes.txt"
+    log_notes_txt = runs_dir / f"{run_id}_log_notes.txt"
+    _attach_file_logging(timing_log)
     if run_notes:
         notes_txt.write_text(run_notes + "\n", encoding="utf-8")
+    if log_notes:
+        log_notes_txt.write_text(log_notes + "\n", encoding="utf-8")
+    logger.info("Timing log file: %s", timing_log.as_posix())
+    logger.info("Timing log notes: %s", log_notes if log_notes else "-")
 
     logger.info(
         "Starting MWE eval run_id=%s dataset=%s split=%s input_mode=%s pv_filter=%s match_mode=%s",
@@ -779,29 +957,17 @@ def main() -> None:
     with _timed_step("Load spaCy pipeline"):
         nlp = get_nlp()
     with _timed_step(f"Parse and lemmatize {len(rows)} rows"):
-        for row in _iter_progress(rows, "Parse rows"):
-            doc = nlp(row["line"])
+        docs = nlp.pipe((row["line"] for row in rows), batch_size=256)
+        for row, doc in zip(_iter_progress(rows, "Parse rows"), docs):
             row["doc"] = doc
             row["lemmas"] = [t.lemma_.lower() for t in doc if not t.is_space and not t.is_punct]
 
-    with _timed_step("Load phrasal verb lexicon"):
-        pvs = get_phrasal_verbs()
-    with _timed_step("Build phrasal verb index"):
-        pv_by_verb = defaultdict(list)
-        for canonical, pv in _iter_progress(list(pvs.items()), "Build PV index"):
-            search_lemmas = pv.get("search_lemmas")
-            if not search_lemmas:
-                particle_tokens = (pv.get("particle") or "").split()
-                if particle_tokens and pv.get("verb_lemma"):
-                    search_lemmas = [pv["verb_lemma"]] + particle_tokens
-            if not search_lemmas or len(search_lemmas) < 2:
-                continue
-            max_gap = 6 if pv.get("separable") else 3
-            pv_by_verb[pv["verb_lemma"]].append((canonical, search_lemmas, max_gap))
-        logger.info(
-            "Built PV index with %d canonical entries across %d verb buckets",
-            len(pvs),
-            len(pv_by_verb),
+    with _timed_step("Load/build phrasal verb index cache"):
+        pv_by_verb = _load_or_build_index(
+            cache_dir / "pv_index.json",
+            source_paths["pv_index"],
+            "pv_index",
+            _build_pv_index,
         )
 
     pv_filter_fn = PV_FILTERS[pv_filter]
@@ -836,8 +1002,13 @@ def main() -> None:
                     })
         logger.info("Collected %d raw phrasal verb predictions", len(pred_rows))
 
-    with _timed_step("Load/build idiom candidate index"):
-        idiom_by_first_lemma = _build_idiom_candidates()
+    with _timed_step("Load/build idiom index cache"):
+        idiom_by_first_lemma = _load_or_build_index(
+            cache_dir / "idiom_index.json",
+            source_paths["idiom_index"],
+            "idiom_index",
+            lambda: _build_idiom_index(nlp),
+        )
     with _timed_step(f"Detect idioms across {len(rows)} rows"):
         idiom_start_count = len(pred_rows)
         for row in _iter_progress(rows, "Detect idioms"):
@@ -986,6 +1157,8 @@ def main() -> None:
                 report_md,
                 metrics_json,
                 notes_txt,
+                log_notes_txt,
+                timing_log,
                 latest_pred,
                 latest_report,
                 latest_metrics,
