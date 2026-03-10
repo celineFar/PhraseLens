@@ -1035,6 +1035,7 @@ def main() -> None:
     with _timed_step(f"Detect idioms across {len(rows)} rows"):
         idiom_start_count = len(pred_rows)
         idiom_suppressed_by_pv = 0
+        idiom_suppressed_with_verbs = 0
         for row in _iter_progress(rows, "Detect idioms"):
             lemmas = row["lemmas"]
             pv_verb_lemmas = row.get("pv_verb_lemmas", set())
@@ -1045,6 +1046,9 @@ def main() -> None:
                     if key in seen:
                         continue
                     if not _find_lemma_sequence(lemmas, query_lemmas):
+                        continue
+                    if verb_lemmas:
+                        idiom_suppressed_with_verbs += 1
                         continue
                     if pv_verb_lemmas and set(verb_lemmas) & pv_verb_lemmas:
                         idiom_suppressed_by_pv += 1
@@ -1063,6 +1067,10 @@ def main() -> None:
         logger.info(
             "Collected %d raw idiom predictions",
             len(pred_rows) - idiom_start_count,
+        )
+        logger.info(
+            "Suppressed %d idiom candidates because their patterns contain verbs",
+            idiom_suppressed_with_verbs,
         )
         logger.info(
             "Suppressed %d idiom candidates due to phrasal-verb verb overlap",
