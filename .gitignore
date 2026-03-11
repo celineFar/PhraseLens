@@ -36,11 +36,3 @@ exports/
 external/
 runs/
 # MLflow
-manual_tests/mlruns/
-mlruns/
-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_predictions.csv
-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md
-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv
-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_predictions.csv
