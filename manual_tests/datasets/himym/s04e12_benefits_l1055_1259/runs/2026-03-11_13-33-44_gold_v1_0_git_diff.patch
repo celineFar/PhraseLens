@@ -1,0 +1,294 @@
+diff --git a/.gitignore b/.gitignore
+index fee9570..af1490a 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -34,13 +34,4 @@ Thumbs.db
+ 
+ exports/
+ external/
+-runs/
+ # MLflow
+-manual_tests/mlruns/
+-mlruns/
+-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
+-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_predictions.csv
+-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md
+-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv
+-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
+-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_predictions.csv
+diff --git a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
+index 7e55a12..bc5c43a 100644
+--- a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
++++ b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
+@@ -1,12 +1,12 @@
+ {
+-  "run_id": "20260311_073000_gold_v1_0",
+-  "generated_at_utc": "2026-03-11T07:30:00.950843+00:00",
++  "run_id": "2026-03-11_13-33-44_gold_v1_0",
++  "generated_at_utc": "2026-03-11T13:33:44.893726+04:00",
+   "gold": 29,
+-  "predicted": 30,
+-  "tp": 23,
+-  "fp": 7,
+-  "fn": 6,
+-  "precision": 0.766667,
+-  "recall": 0.793103,
+-  "f1": 0.779661
++  "predicted": 76,
++  "tp": 16,
++  "fp": 60,
++  "fn": 13,
++  "precision": 0.210526,
++  "recall": 0.551724,
++  "f1": 0.304762
+ }
+\ No newline at end of file
+diff --git a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_predictions.csv b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_predictions.csv
+index 28a2c70..d28e818 100644
+--- a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_predictions.csv
++++ b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_predictions.csv
+@@ -1,37 +1,90 @@
+ episode_name,season,line_index,speaker,line,expression,expression_type,label,notes,predicted,prediction_expression,prediction_type,prediction_detector,match_status
++s04e12_benefits_l1055_1259,4,1061,Ted,"So, take out the trash.",,,,,yes,take someone or something out,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1061,Ted,"So, take out the trash.",,,,,yes,take someone out,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1061,Ted,"So, take out the trash.",,,,,yes,take something out,idiom,engine_idiom,fp
+ s04e12_benefits_l1055_1259,4,1061,Ted,"So, take out the trash.",take out,phrasal_verb,gold,manual_annotation,yes,take out,phrasal_verb,engine_phrasal_verb,tp
+-s04e12_benefits_l1055_1259,4,1068,Robin,"No, I went there yesterday... Stop it! Stop it! My God, what happens? When we were a couple, we lived together and we almost went insane.",live together,phrasal_verb,gold,manual_annotation,yes,live together,phrasal_verb,engine_phrasal_verb,tp
++s04e12_benefits_l1055_1259,4,1068,Robin,"No, I went there yesterday... Stop it! Stop it! My God, what happens? When we were a couple, we lived together and we almost went insane.",,,,,yes,couple something together,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1068,Robin,"No, I went there yesterday... Stop it! Stop it! My God, what happens? When we were a couple, we lived together and we almost went insane.",,,,,yes,go there,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1068,Robin,"No, I went there yesterday... Stop it! Stop it! My God, what happens? When we were a couple, we lived together and we almost went insane.",,,,,yes,no go,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1068,Robin,"No, I went there yesterday... Stop it! Stop it! My God, what happens? When we were a couple, we lived together and we almost went insane.",,,,,yes,what happened,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1068,Robin,"No, I went there yesterday... Stop it! Stop it! My God, what happens? When we were a couple, we lived together and we almost went insane.",live together,phrasal_verb,gold,manual_annotation,yes,live together,idiom,engine_idiom,tp
++s04e12_benefits_l1055_1259,4,1072,Barney,"I explained. I said, Madeline, every international conflict essentially boils down to sexual tension.",,,,,yes,boil down to something,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1072,Barney,"I explained. I said, Madeline, every international conflict essentially boils down to sexual tension.",,,,,yes,boil something down,idiom,engine_idiom,fp
+ s04e12_benefits_l1055_1259,4,1072,Barney,"I explained. I said, Madeline, every international conflict essentially boils down to sexual tension.",,,,,yes,boil down to,phrasal_verb,engine_phrasal_verb,fp
+-s04e12_benefits_l1055_1259,4,1072,Barney,"I explained. I said, Madeline, every international conflict essentially boils down to sexual tension.",boil down,phrasal_verb,gold,manual_annotation,yes,boil down,phrasal_verb,engine_phrasal_verb,tp
++s04e12_benefits_l1055_1259,4,1072,Barney,"I explained. I said, Madeline, every international conflict essentially boils down to sexual tension.",boil down,phrasal_verb,gold,manual_annotation,yes,boil down,idiom,engine_idiom,tp
++s04e12_benefits_l1055_1259,4,1087,Marshall,"You do not care what, guys? You are back together?",,,,,yes,do what,idiom,engine_idiom,fp
+ s04e12_benefits_l1055_1259,4,1087,Marshall,"You do not care what, guys? You are back together?",back together,phrasal_verb,gold,manual_annotation,no,,,,fn
+-s04e12_benefits_l1055_1259,4,1091,Marshall,I was working and I had to take a leap here...reading this magazine. In... the room there.,take a leap,idiom,gold,manual_annotation,yes,take a leap,idiom,engine_idiom,tp
++s04e12_benefits_l1055_1259,4,1091,Marshall,I was working and I had to take a leap here...reading this magazine. In... the room there.,,,,,yes,in there,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1091,Marshall,I was working and I had to take a leap here...reading this magazine. In... the room there.,,,,,yes,read something in something,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1091,Marshall,I was working and I had to take a leap here...reading this magazine. In... the room there.,take a leap,idiom,gold,manual_annotation,no,,,,fn
++s04e12_benefits_l1055_1259,4,1093,Robin,"If this is a problem. You've done all the way here to read a magazine? I am willing to bet that there is a place to read this magazine at work. You know, a room with a little man on the door?",,,,,yes,at work,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1093,Robin,"If this is a problem. You've done all the way here to read a magazine? I am willing to bet that there is a place to read this magazine at work. You know, a room with a little man on the door?",,,,,yes,room with someone,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1093,Robin,"If this is a problem. You've done all the way here to read a magazine? I am willing to bet that there is a place to read this magazine at work. You know, a room with a little man on the door?",,,,,yes,that there,idiom,engine_idiom,fp
+ s04e12_benefits_l1055_1259,4,1093,Robin,"If this is a problem. You've done all the way here to read a magazine? I am willing to bet that there is a place to read this magazine at work. You know, a room with a little man on the door?",all the way,idiom,gold,manual_annotation,yes,all the way,idiom,engine_idiom,tp
++s04e12_benefits_l1055_1259,4,1110,Lily,"No. It could ruin your friendship. When two former try the ""right opportunity"", someone always ends in pain.",,,,,yes,end in something,idiom,engine_idiom,fp
+ s04e12_benefits_l1055_1259,4,1110,Lily,"No. It could ruin your friendship. When two former try the ""right opportunity"", someone always ends in pain.",end in,phrasal_verb,gold,manual_annotation,yes,end in,phrasal_verb,engine_phrasal_verb,tp
++s04e12_benefits_l1055_1259,4,1116,Ted,Absolutely! Let's multitasking. Use sex to spice up the boring activities.,,,,,yes,spice something up,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1116,Ted,Absolutely! Let's multitasking. Use sex to spice up the boring activities.,,,,,yes,used to someone or something,idiom,engine_idiom,fp
+ s04e12_benefits_l1055_1259,4,1116,Ted,Absolutely! Let's multitasking. Use sex to spice up the boring activities.,spice up,phrasal_verb,gold,manual_annotation,yes,spice up,phrasal_verb,engine_phrasal_verb,tp
+-s04e12_benefits_l1055_1259,4,1131,Lily,You must learn to express your feelings. Perhaps you should see a psychiatrist.,see a psychiatrist,idiom,gold,manual_annotation,yes,see a psychiatrist,idiom,engine_idiom,tp
+-s04e12_benefits_l1055_1259,4,1164,Lily,"No, it's wrong. You must learn to get it out. As we did in my kindergarten class. ""The time for emotions"", every Tuesday morning.",,,,,yes,get out!,phrasal_verb,engine_phrasal_verb,fp
+-s04e12_benefits_l1055_1259,4,1164,Lily,"No, it's wrong. You must learn to get it out. As we did in my kindergarten class. ""The time for emotions"", every Tuesday morning.",get out,phrasal_verb,gold,manual_annotation,yes,get out,phrasal_verb,engine_phrasal_verb,tp
++s04e12_benefits_l1055_1259,4,1131,Lily,You must learn to express your feelings. Perhaps you should see a psychiatrist.,see a psychiatrist,idiom,gold,manual_annotation,no,,,,fn
++s04e12_benefits_l1055_1259,4,1164,Lily,"No, it's wrong. You must learn to get it out. As we did in my kindergarten class. ""The time for emotions"", every Tuesday morning.",,,,,yes,done in,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1164,Lily,"No, it's wrong. You must learn to get it out. As we did in my kindergarten class. ""The time for emotions"", every Tuesday morning.",,,,,yes,get it out,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1164,Lily,"No, it's wrong. You must learn to get it out. As we did in my kindergarten class. ""The time for emotions"", every Tuesday morning.",,,,,yes,get out of here,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1164,Lily,"No, it's wrong. You must learn to get it out. As we did in my kindergarten class. ""The time for emotions"", every Tuesday morning.",,,,,yes,get something out,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1164,Lily,"No, it's wrong. You must learn to get it out. As we did in my kindergarten class. ""The time for emotions"", every Tuesday morning.",,,,,yes,time for someone or something,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1164,Lily,"No, it's wrong. You must learn to get it out. As we did in my kindergarten class. ""The time for emotions"", every Tuesday morning.",get out,phrasal_verb,gold,manual_annotation,yes,get out!,phrasal_verb,engine_phrasal_verb,tp
++s04e12_benefits_l1055_1259,4,1169,Robin,"Sure, it was a good one. Personal memo: leave it lying around the pizza box more often.",,,,,yes,lay around,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1169,Robin,"Sure, it was a good one. Personal memo: leave it lying around the pizza box more often.",,,,,yes,leave something lying around,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1169,Robin,"Sure, it was a good one. Personal memo: leave it lying around the pizza box more often.",,,,,yes,lie around some place,idiom,engine_idiom,fp
+ s04e12_benefits_l1055_1259,4,1169,Robin,"Sure, it was a good one. Personal memo: leave it lying around the pizza box more often.",lie around,phrasal_verb,gold,manual_annotation,yes,lie around,phrasal_verb,engine_phrasal_verb,tp
+-s04e12_benefits_l1055_1259,4,1170,Ted,"Okay, see you later.",see you later,idiom,gold,manual_annotation,yes,see you later,idiom,engine_idiom,tp
+-s04e12_benefits_l1055_1259,4,1178,Ted,No. It meant nothing. It was just a reflex when we were a couple. But I did everything go wrong.,go wrong,phrasal_verb,gold,manual_annotation,no,,,,fn
+-s04e12_benefits_l1055_1259,4,1183,Robin,"Come on, Lily. Do not your Ted.",come on,idiom,gold,manual_annotation,yes,come on,idiom,engine_idiom,tp
+-s04e12_benefits_l1055_1259,4,1191,Robin,"This is for the best. It was fun, but I do not want it becoming weird.",for the best,idiom,gold,manual_annotation,yes,for the best,idiom,engine_idiom,tp
++s04e12_benefits_l1055_1259,4,1170,Ted,"Okay, see you later.",see you later,idiom,gold,manual_annotation,no,,,,fn
++s04e12_benefits_l1055_1259,4,1178,Ted,No. It meant nothing. It was just a reflex when we were a couple. But I did everything go wrong.,,,,,yes,mean nothing to someone,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1178,Ted,No. It meant nothing. It was just a reflex when we were a couple. But I did everything go wrong.,go wrong,phrasal_verb,gold,manual_annotation,yes,go wrong,idiom,engine_idiom,tp
++s04e12_benefits_l1055_1259,4,1183,Robin,"Come on, Lily. Do not your Ted.",come on,idiom,gold,manual_annotation,yes,come on,phrasal_verb,engine_phrasal_verb,tp
++s04e12_benefits_l1055_1259,4,1191,Robin,"This is for the best. It was fun, but I do not want it becoming weird.",,,,,yes,all for the best,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1191,Robin,"This is for the best. It was fun, but I do not want it becoming weird.",,,,,yes,for good,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1191,Robin,"This is for the best. It was fun, but I do not want it becoming weird.",for the best,idiom,gold,manual_annotation,no,,,,fn
++s04e12_benefits_l1055_1259,4,1204,Marshall,"Everything was going well. I felt more and more comfortable, more confident. I could conquer the world. One morning I'm in the eighth with a magazine.",,,,,yes,more and more,idiom,engine_idiom,fp
+ s04e12_benefits_l1055_1259,4,1204,Marshall,"Everything was going well. I felt more and more comfortable, more confident. I could conquer the world. One morning I'm in the eighth with a magazine.",go well,phrasal_verb,gold,manual_annotation,no,,,,fn
++s04e12_benefits_l1055_1259,4,1209,Barney,"Because of your bickering roommates are always a source of conflict between you two, I wanted to help. In fact, I went to the post. I took you stamps. In about 10 000. That should be enough.",,,,,yes,help someone in something,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1209,Barney,"Because of your bickering roommates are always a source of conflict between you two, I wanted to help. In fact, I went to the post. I took you stamps. In about 10 000. That should be enough.",,,,,yes,help someone into something,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1209,Barney,"Because of your bickering roommates are always a source of conflict between you two, I wanted to help. In fact, I went to the post. I took you stamps. In about 10 000. That should be enough.",,,,,yes,take someone in,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1209,Barney,"Because of your bickering roommates are always a source of conflict between you two, I wanted to help. In fact, I went to the post. I took you stamps. In about 10 000. That should be enough.",,,,,yes,take someone or an animal in,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1209,Barney,"Because of your bickering roommates are always a source of conflict between you two, I wanted to help. In fact, I went to the post. I took you stamps. In about 10 000. That should be enough.",,,,,yes,take someone something or an animal inside,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1209,Barney,"Because of your bickering roommates are always a source of conflict between you two, I wanted to help. In fact, I went to the post. I took you stamps. In about 10 000. That should be enough.",,,,,yes,take something in,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1209,Barney,"Because of your bickering roommates are always a source of conflict between you two, I wanted to help. In fact, I went to the post. I took you stamps. In about 10 000. That should be enough.",,,,,yes,want into something,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1209,Barney,"Because of your bickering roommates are always a source of conflict between you two, I wanted to help. In fact, I went to the post. I took you stamps. In about 10 000. That should be enough.",,,,,yes,want someone or something in something,idiom,engine_idiom,fp
+ s04e12_benefits_l1055_1259,4,1209,Barney,"Because of your bickering roommates are always a source of conflict between you two, I wanted to help. In fact, I went to the post. I took you stamps. In about 10 000. That should be enough.",in fact,idiom,gold,manual_annotation,yes,in fact,idiom,engine_idiom,tp
++s04e12_benefits_l1055_1259,4,1211,Barney,I took it in passing. It's nothing.,,,,,yes,take someone in,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1211,Barney,I took it in passing. It's nothing.,,,,,yes,take someone or an animal in,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1211,Barney,I took it in passing. It's nothing.,,,,,yes,take someone something or an animal inside,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1211,Barney,I took it in passing. It's nothing.,,,,,yes,take something in,idiom,engine_idiom,fp
+ s04e12_benefits_l1055_1259,4,1211,Barney,I took it in passing. It's nothing.,,,,,yes,take in,phrasal_verb,engine_phrasal_verb,fp
+ s04e12_benefits_l1055_1259,4,1211,Barney,I took it in passing. It's nothing.,in passing,idiom,gold,manual_annotation,yes,in passing,idiom,engine_idiom,tp
+-s04e12_benefits_l1055_1259,4,1223,Barney,"No. This is not true, no. This is not true, no. No. Robin is all yours, man. ",all yours,idiom,gold,manual_annotation,yes,all yours,idiom,engine_idiom,tp
++s04e12_benefits_l1055_1259,4,1223,Barney,"No. This is not true, no. This is not true, no. No. Robin is all yours, man. ",all yours,idiom,gold,manual_annotation,no,,,,fn
+ s04e12_benefits_l1055_1259,4,1223,Barney,"Exploding yourself with it. Now if you'll excuse me, I'll go sleep with other girls.",sleep with,phrasal_verb,gold,manual_annotation,no,,,,fn
+-s04e12_benefits_l1055_1259,4,1228,Barney,And I went with a bang. Why did I do that? It comes perhaps my father issues.,go with a bang,idiom,gold,manual_annotation,yes,go with a bang,idiom,engine_idiom,tp
+-s04e12_benefits_l1055_1259,4,1229,Lily,Get out of here.,,,,,yes,get out,phrasal_verb,engine_phrasal_verb,fp
++s04e12_benefits_l1055_1259,4,1228,Barney,And I went with a bang. Why did I do that? It comes perhaps my father issues.,go with a bang,idiom,gold,manual_annotation,no,,,,fn
++s04e12_benefits_l1055_1259,4,1229,Lily,Get out of here.,,,,,yes,get out of here,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1229,Lily,Get out of here.,,,,,yes,get something out,idiom,engine_idiom,fp
+ s04e12_benefits_l1055_1259,4,1229,Lily,Get out of here.,,,,,yes,get out!,phrasal_verb,engine_phrasal_verb,fp
+ s04e12_benefits_l1055_1259,4,1229,Lily,Get out of here.,get out of,phrasal_verb,gold,manual_annotation,yes,get out of,phrasal_verb,engine_phrasal_verb,tp
++s04e12_benefits_l1055_1259,4,1241,Marshall,Thank you. I would have done well at some point.,,,,,yes,have at someone,idiom,engine_idiom,fp
+ s04e12_benefits_l1055_1259,4,1241,Marshall,Thank you. I would have done well at some point.,,,,,yes,do better,phrasal_verb,engine_phrasal_verb,fp
+-s04e12_benefits_l1055_1259,4,1241,Marshall,Thank you. I would have done well at some point.,at some point,idiom,gold,manual_annotation,yes,at some point,idiom,engine_idiom,tp
++s04e12_benefits_l1055_1259,4,1241,Marshall,Thank you. I would have done well at some point.,at some point,idiom,gold,manual_annotation,no,,,,fn
+ s04e12_benefits_l1055_1259,4,1241,Marshall,Sometimes you have to... You have to say and... go there.,go there,phrasal_verb,gold,manual_annotation,no,,,,fn
+-s04e12_benefits_l1055_1259,4,1242,Barney,"Marshall, I gotta go. ",gotta go,idiom,gold,manual_annotation,yes,gotta go,idiom,engine_idiom,tp
++s04e12_benefits_l1055_1259,4,1242,Barney,"Marshall, I gotta go. ",,,,,yes,get someone going,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1242,Barney,"Marshall, I gotta go. ",,,,,yes,ive got to go,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1242,Barney,"Marshall, I gotta go. ",gotta go,idiom,gold,manual_annotation,no,,,,fn
+ s04e12_benefits_l1055_1259,4,1245,Robin,"I go step-louse. If you are looking for Ted, he was released. And... our little arrangement is... completed, by the way.",by the way,idiom,gold,manual_annotation,yes,by the way,idiom,engine_idiom,tp
+ s04e12_benefits_l1055_1259,4,1245,Robin,"And... our little arrangement is... completed, by the way.",look for,phrasal_verb,gold,manual_annotation,no,,,,fn
++s04e12_benefits_l1055_1259,4,1255,Robin,"Right. It's not like you, you know? In addition, we are friends. I want to complicate matters by committing. Hanging out with friends never works. So... you want to go eat a taco?",,,,,yes,hang out of something,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1255,Robin,"Right. It's not like you, you know? In addition, we are friends. I want to complicate matters by committing. Hanging out with friends never works. So... you want to go eat a taco?",,,,,yes,hang out some place,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1255,Robin,"Right. It's not like you, you know? In addition, we are friends. I want to complicate matters by committing. Hanging out with friends never works. So... you want to go eat a taco?",,,,,yes,hang out with someone or something,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1255,Robin,"Right. It's not like you, you know? In addition, we are friends. I want to complicate matters by committing. Hanging out with friends never works. So... you want to go eat a taco?",,,,,yes,hang someone or something with something,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1255,Robin,"Right. It's not like you, you know? In addition, we are friends. I want to complicate matters by committing. Hanging out with friends never works. So... you want to go eat a taco?",,,,,yes,hang something out of something,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1255,Robin,"Right. It's not like you, you know? In addition, we are friends. I want to complicate matters by committing. Hanging out with friends never works. So... you want to go eat a taco?",,,,,yes,hang with someone,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1255,Robin,"Right. It's not like you, you know? In addition, we are friends. I want to complicate matters by committing. Hanging out with friends never works. So... you want to go eat a taco?",,,,,yes,in addition to something,idiom,engine_idiom,fp
++s04e12_benefits_l1055_1259,4,1255,Robin,"Right. It's not like you, you know? In addition, we are friends. I want to complicate matters by committing. Hanging out with friends never works. So... you want to go eat a taco?",,,,,yes,like you know,idiom,engine_idiom,fp
+ s04e12_benefits_l1055_1259,4,1255,Robin,"Right. It's not like you, you know? In addition, we are friends. I want to complicate matters by committing. Hanging out with friends never works. So... you want to go eat a taco?",,,,,yes,hang with,phrasal_verb,engine_phrasal_verb,fp
+ s04e12_benefits_l1055_1259,4,1255,Robin,"Right. It's not like you, you know? In addition, we are friends. I want to complicate matters by committing. Hanging out with friends never works. So... you want to go eat a taco?",hang out,phrasal_verb,gold,manual_annotation,yes,hang out,phrasal_verb,engine_phrasal_verb,tp
+-s04e12_benefits_l1055_1259,4,1259,Robin,"Come on, I'm hungry.",come on,idiom,gold,manual_annotation,yes,come on,idiom,engine_idiom,tp
++s04e12_benefits_l1055_1259,4,1259,Robin,"Come on, I'm hungry.",come on,idiom,gold,manual_annotation,yes,come on,phrasal_verb,engine_phrasal_verb,tp
+diff --git a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md
+index be84d56..8988a59 100644
+--- a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md
++++ b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md
+@@ -1,9 +1,9 @@
+ # MWE Evaluation Report
+ 
+ ## Run Metadata
+-- Run ID: `20260311_073000_gold_v1_0`
+-- Generated at (UTC): `2026-03-11T07:30:00.950843+00:00`
+-- Run notes: `before any changes` 
++- Run ID: `2026-03-11_13-33-44_gold_v1_0`
++- Generated at (UTC): `2026-03-11T13:33:44.893726+04:00`
++- Run notes: `remove test data leak` 
+ 
+ ## Dataset Scope
+ - Source: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold_v.1.0.csv (gold_only)`
+@@ -14,52 +14,72 @@
+ 
+ ## Files
+ - Gold annotations: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold_v.1.0.csv`
+-- Engine predictions: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260311_073000_gold_v1_0_predictions.csv`
++- Engine predictions: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-11_13-33-44_gold_v1_0_predictions.csv`
+ 
+ ## Overall Metrics
+ - Gold instances: 29
+-- Predicted instances: 30
+-- True Positives (TP): 23
+-- False Positives (FP): 7
+-- False Negatives (FN): 6
+-- Precision: 0.7667
+-- Recall: 0.7931
+-- F1 score: 0.7797
++- Predicted instances: 76
++- True Positives (TP): 16
++- False Positives (FP): 60
++- False Negatives (FN): 13
++- Precision: 0.2105
++- Recall: 0.5517
++- F1 score: 0.3048
+ 
+ ## By Expression Type
+ ### Phrasal Verbs
+ - Gold: 15
+-- Predicted: 18
++- Predicted: 16
+ - TP: 9
+-- FP: 9
++- FP: 7
+ - FN: 6
+-- Precision: 0.5000
++- Precision: 0.5625
+ - Recall: 0.6000
+-- F1: 0.5455
++- F1: 0.5806
+ 
+ ### Idioms
+ - Gold: 14
+-- Predicted: 14
+-- TP: 14
+-- FP: 0
+-- FN: 0
+-- Precision: 1.0000
+-- Recall: 1.0000
+-- F1: 1.0000
++- Predicted: 62
++- TP: 4
++- FP: 58
++- FN: 10
++- Precision: 0.0645
++- Recall: 0.2857
++- F1: 0.1053
+ 
+ ## Example False Positives (up to 20)
++- line 1061 | * | `take someone or something out` | So, take out the trash.
++- line 1061 | * | `take someone out` | So, take out the trash.
++- line 1061 | * | `take something out` | So, take out the trash.
++- line 1068 | * | `couple something together` | No, I went there yesterday... Stop it! Stop it! My God, what happens? When we were a couple, we lived together and we almost went insane.
++- line 1068 | * | `go there` | No, I went there yesterday... Stop it! Stop it! My God, what happens? When we were a couple, we lived together and we almost went insane.
++- line 1068 | * | `no go` | No, I went there yesterday... Stop it! Stop it! My God, what happens? When we were a couple, we lived together and we almost went insane.
++- line 1068 | * | `what happened` | No, I went there yesterday... Stop it! Stop it! My God, what happens? When we were a couple, we lived together and we almost went insane.
+ - line 1072 | * | `boil down to` | I explained. I said, Madeline, every international conflict essentially boils down to sexual tension.
+-- line 1164 | * | `get out!` | No, it's wrong. You must learn to get it out. As we did in my kindergarten class. "The time for emotions", every Tuesday morning.
+-- line 1211 | * | `take in` | I took it in passing. It's nothing.
+-- line 1229 | * | `get out` | Get out of here.
+-- line 1229 | * | `get out!` | Get out of here.
+-- line 1241 | * | `do better` | Thank you. I would have done well at some point.
+-- line 1255 | * | `hang with` | Right. It's not like you, you know? In addition, we are friends. I want to complicate matters by committing. Hanging out with friends never works. So... you want to go eat a taco?
++- line 1072 | * | `boil down to something` | I explained. I said, Madeline, every international conflict essentially boils down to sexual tension.
++- line 1072 | * | `boil something down` | I explained. I said, Madeline, every international conflict essentially boils down to sexual tension.
++- line 1087 | * | `do what` | You do not care what, guys? You are back together?
++- line 1091 | * | `in there` | I was working and I had to take a leap here...reading this magazine. In... the room there.
++- line 1091 | * | `read something in something` | I was working and I had to take a leap here...reading this magazine. In... the room there.
++- line 1093 | * | `at work` | If this is a problem. You've done all the way here to read a magazine? I am willing to bet that there is a place to read this magazine at work. You know, a room with a little man on the door?
++- line 1093 | * | `room with someone` | If this is a problem. You've done all the way here to read a magazine? I am willing to bet that there is a place to read this magazine at work. You know, a room with a little man on the door?
++- line 1093 | * | `that there` | If this is a problem. You've done all the way here to read a magazine? I am willing to bet that there is a place to read this magazine at work. You know, a room with a little man on the door?
++- line 1110 | * | `end in something` | No. It could ruin your friendship. When two former try the "right opportunity", someone always ends in pain.
++- line 1116 | * | `spice something up` | Absolutely! Let's multitasking. Use sex to spice up the boring activities.
++- line 1116 | * | `used to someone or something` | Absolutely! Let's multitasking. Use sex to spice up the boring activities.
++- line 1164 | * | `done in` | No, it's wrong. You must learn to get it out. As we did in my kindergarten class. "The time for emotions", every Tuesday morning.
+ 
+ ## Example False Negatives (up to 20)
+ - line 1087 | * | `back together` | You do not care what, guys? You are back together?
+-- line 1178 | * | `go wrong` | No. It meant nothing. It was just a reflex when we were a couple. But I did everything go wrong.
++- line 1091 | * | `take a leap` | I was working and I had to take a leap here...reading this magazine. In... the room there.
++- line 1131 | * | `see a psychiatrist` | You must learn to express your feelings. Perhaps you should see a psychiatrist.
++- line 1170 | * | `see you later` | Okay, see you later.
++- line 1191 | * | `for the best` | This is for the best. It was fun, but I do not want it becoming weird.
+ - line 1204 | * | `go well` | Everything was going well. I felt more and more comfortable, more confident. I could conquer the world. One morning I'm in the eighth with a magazine.
++- line 1223 | * | `all yours` | No. This is not true, no. This is not true, no. No. Robin is all yours, man. 
+ - line 1223 | * | `sleep with` | No. This is not true, no. This is not true, no. No. Robin is all yours, man. 
++- line 1228 | * | `go with a bang` | And I went with a bang. Why did I do that? It comes perhaps my father issues.
++- line 1241 | * | `at some point` | Thank you. I would have done well at some point.
+ - line 1241 | * | `go there` | Thank you. I would have done well at some point.
++- line 1242 | * | `gotta go` | Marshall, I gotta go. 
+ - line 1245 | * | `look for` | And... our little arrangement is... completed, by the way.
+diff --git a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv
+index b8105cf..e488409 100644
+--- a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv
++++ b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv
+@@ -19,3 +19,4 @@ run_id,generated_at_utc,dataset_id,split_id,gold,predicted,tp,fp,fn,precision,re
+ 20260309_114310_gold-corrected,2026-03-09T11:43:10.221486+00:00,himym,s04e12_benefits_l1055_1259,29,31,23,8,6,0.741935,0.793103,0.766667,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_114310_gold-corrected_predictions.csv,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_114310_gold-corrected_report.md,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_114310_gold-corrected_metrics.json,
+ 20260309_134256_gold_v1_0,2026-03-09T13:42:56.181980+00:00,himym,s04e12_benefits_l1055_1259,29,30,23,7,6,0.766667,0.793103,0.779661,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_134256_gold_v1_0_predictions.csv,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_134256_gold_v1_0_report.md,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_134256_gold_v1_0_metrics.json,
+ 20260311_073000_gold_v1_0,2026-03-11T07:30:00.950843+00:00,himym,s04e12_benefits_l1055_1259,29,30,23,7,6,0.766667,0.793103,0.779661,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260311_073000_gold_v1_0_predictions.csv,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260311_073000_gold_v1_0_report.md,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260311_073000_gold_v1_0_metrics.json,before any changes
++2026-03-11_13-33-44_gold_v1_0,2026-03-11T13:33:44.893726+04:00,himym,s04e12_benefits_l1055_1259,29,76,16,60,13,0.210526,0.551724,0.304762,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-11_13-33-44_gold_v1_0_predictions.csv,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-11_13-33-44_gold_v1_0_report.md,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-11_13-33-44_gold_v1_0_metrics.json,remove test data leak
+diff --git a/manual_tests/manual_test_config.toml b/manual_tests/manual_test_config.toml
+index 218592c..071d1b7 100644
+--- a/manual_tests/manual_test_config.toml
++++ b/manual_tests/manual_test_config.toml
+@@ -24,7 +24,7 @@ season_col = ""
+ 
+ # Optional run metadata
+ run_label = "gold_v1_0"
+-run_notes = "before any changes"
++run_notes = "remove test data leak"
+ 
+ # Phrasal verb filter strategy
+ # Choices: none, dep_only, blocklist, dep_extended, dep_highfreq, hybrid
