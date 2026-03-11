@@ -1,0 +1,37 @@
+episode_name,season,line_index,speaker,line,expression,expression_type,label,notes,predicted,prediction_expression,prediction_type,prediction_detector,match_status
+s04e12_benefits_l1055_1259,4,1061,Ted,"So, take out the trash.",take out,phrasal_verb,gold,manual_annotation,yes,take out,phrasal_verb,engine_phrasal_verb,tp
+s04e12_benefits_l1055_1259,4,1068,Robin,"No, I went there yesterday... Stop it! Stop it! My God, what happens? When we were a couple, we lived together and we almost went insane.",live together,phrasal_verb,gold,manual_annotation,yes,live together,phrasal_verb,engine_phrasal_verb,tp
+s04e12_benefits_l1055_1259,4,1072,Barney,"I explained. I said, Madeline, every international conflict essentially boils down to sexual tension.",,,,,yes,boil down to,phrasal_verb,engine_phrasal_verb,fp
+s04e12_benefits_l1055_1259,4,1072,Barney,"I explained. I said, Madeline, every international conflict essentially boils down to sexual tension.",boil down,phrasal_verb,gold,manual_annotation,yes,boil down,phrasal_verb,engine_phrasal_verb,tp
+s04e12_benefits_l1055_1259,4,1087,Marshall,"You do not care what, guys? You are back together?",back together,phrasal_verb,gold,manual_annotation,no,,,,fn
+s04e12_benefits_l1055_1259,4,1091,Marshall,I was working and I had to take a leap here...reading this magazine. In... the room there.,take a leap,idiom,gold,manual_annotation,yes,take a leap,idiom,engine_idiom,tp
+s04e12_benefits_l1055_1259,4,1093,Robin,"If this is a problem. You've done all the way here to read a magazine? I am willing to bet that there is a place to read this magazine at work. You know, a room with a little man on the door?",all the way,idiom,gold,manual_annotation,yes,all the way,idiom,engine_idiom,tp
+s04e12_benefits_l1055_1259,4,1110,Lily,"No. It could ruin your friendship. When two former try the ""right opportunity"", someone always ends in pain.",end in,phrasal_verb,gold,manual_annotation,yes,end in,phrasal_verb,engine_phrasal_verb,tp
+s04e12_benefits_l1055_1259,4,1116,Ted,Absolutely! Let's multitasking. Use sex to spice up the boring activities.,spice up,phrasal_verb,gold,manual_annotation,yes,spice up,phrasal_verb,engine_phrasal_verb,tp
+s04e12_benefits_l1055_1259,4,1131,Lily,You must learn to express your feelings. Perhaps you should see a psychiatrist.,see a psychiatrist,idiom,gold,manual_annotation,yes,see a psychiatrist,idiom,engine_idiom,tp
+s04e12_benefits_l1055_1259,4,1164,Lily,"No, it's wrong. You must learn to get it out. As we did in my kindergarten class. ""The time for emotions"", every Tuesday morning.",,,,,yes,get out!,phrasal_verb,engine_phrasal_verb,fp
+s04e12_benefits_l1055_1259,4,1164,Lily,"No, it's wrong. You must learn to get it out. As we did in my kindergarten class. ""The time for emotions"", every Tuesday morning.",get out,phrasal_verb,gold,manual_annotation,yes,get out,phrasal_verb,engine_phrasal_verb,tp
+s04e12_benefits_l1055_1259,4,1169,Robin,"Sure, it was a good one. Personal memo: leave it lying around the pizza box more often.",lie around,phrasal_verb,gold,manual_annotation,yes,lie around,phrasal_verb,engine_phrasal_verb,tp
+s04e12_benefits_l1055_1259,4,1170,Ted,"Okay, see you later.",see you later,idiom,gold,manual_annotation,yes,see you later,idiom,engine_idiom,tp
+s04e12_benefits_l1055_1259,4,1178,Ted,No. It meant nothing. It was just a reflex when we were a couple. But I did everything go wrong.,go wrong,phrasal_verb,gold,manual_annotation,no,,,,fn
+s04e12_benefits_l1055_1259,4,1183,Robin,"Come on, Lily. Do not your Ted.",come on,idiom,gold,manual_annotation,yes,come on,idiom,engine_idiom,tp
+s04e12_benefits_l1055_1259,4,1191,Robin,"This is for the best. It was fun, but I do not want it becoming weird.",for the best,idiom,gold,manual_annotation,yes,for the best,idiom,engine_idiom,tp
+s04e12_benefits_l1055_1259,4,1204,Marshall,"Everything was going well. I felt more and more comfortable, more confident. I could conquer the world. One morning I'm in the eighth with a magazine.",go well,phrasal_verb,gold,manual_annotation,no,,,,fn
+s04e12_benefits_l1055_1259,4,1209,Barney,"Because of your bickering roommates are always a source of conflict between you two, I wanted to help. In fact, I went to the post. I took you stamps. In about 10 000. That should be enough.",in fact,idiom,gold,manual_annotation,yes,in fact,idiom,engine_idiom,tp
+s04e12_benefits_l1055_1259,4,1211,Barney,I took it in passing. It's nothing.,,,,,yes,take in,phrasal_verb,engine_phrasal_verb,fp
+s04e12_benefits_l1055_1259,4,1211,Barney,I took it in passing. It's nothing.,in passing,idiom,gold,manual_annotation,yes,in passing,idiom,engine_idiom,tp
+s04e12_benefits_l1055_1259,4,1223,Barney,"No. This is not true, no. This is not true, no. No. Robin is all yours, man. ",all yours,idiom,gold,manual_annotation,yes,all yours,idiom,engine_idiom,tp
+s04e12_benefits_l1055_1259,4,1223,Barney,"Exploding yourself with it. Now if you'll excuse me, I'll go sleep with other girls.",sleep with,phrasal_verb,gold,manual_annotation,no,,,,fn
+s04e12_benefits_l1055_1259,4,1228,Barney,And I went with a bang. Why did I do that? It comes perhaps my father issues.,go with a bang,idiom,gold,manual_annotation,yes,go with a bang,idiom,engine_idiom,tp
+s04e12_benefits_l1055_1259,4,1229,Lily,Get out of here.,,,,,yes,get out,phrasal_verb,engine_phrasal_verb,fp
+s04e12_benefits_l1055_1259,4,1229,Lily,Get out of here.,,,,,yes,get out!,phrasal_verb,engine_phrasal_verb,fp
+s04e12_benefits_l1055_1259,4,1229,Lily,Get out of here.,get out of,phrasal_verb,gold,manual_annotation,yes,get out of,phrasal_verb,engine_phrasal_verb,tp
+s04e12_benefits_l1055_1259,4,1241,Marshall,Thank you. I would have done well at some point.,,,,,yes,do better,phrasal_verb,engine_phrasal_verb,fp
+s04e12_benefits_l1055_1259,4,1241,Marshall,Thank you. I would have done well at some point.,at some point,idiom,gold,manual_annotation,yes,at some point,idiom,engine_idiom,tp
+s04e12_benefits_l1055_1259,4,1241,Marshall,Sometimes you have to... You have to say and... go there.,go there,phrasal_verb,gold,manual_annotation,no,,,,fn
+s04e12_benefits_l1055_1259,4,1242,Barney,"Marshall, I gotta go. ",gotta go,idiom,gold,manual_annotation,yes,gotta go,idiom,engine_idiom,tp
+s04e12_benefits_l1055_1259,4,1245,Robin,"I go step-louse. If you are looking for Ted, he was released. And... our little arrangement is... completed, by the way.",by the way,idiom,gold,manual_annotation,yes,by the way,idiom,engine_idiom,tp
+s04e12_benefits_l1055_1259,4,1245,Robin,"And... our little arrangement is... completed, by the way.",look for,phrasal_verb,gold,manual_annotation,no,,,,fn
+s04e12_benefits_l1055_1259,4,1255,Robin,"Right. It's not like you, you know? In addition, we are friends. I want to complicate matters by committing. Hanging out with friends never works. So... you want to go eat a taco?",,,,,yes,hang with,phrasal_verb,engine_phrasal_verb,fp
+s04e12_benefits_l1055_1259,4,1255,Robin,"Right. It's not like you, you know? In addition, we are friends. I want to complicate matters by committing. Hanging out with friends never works. So... you want to go eat a taco?",hang out,phrasal_verb,gold,manual_annotation,yes,hang out,phrasal_verb,engine_phrasal_verb,tp
+s04e12_benefits_l1055_1259,4,1259,Robin,"Come on, I'm hungry.",come on,idiom,gold,manual_annotation,yes,come on,idiom,engine_idiom,tp

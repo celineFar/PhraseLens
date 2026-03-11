@@ -1,0 +1,12 @@
+## main...origin/main
+ M manual_tests/README.md
+ D manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold.csv
+ M manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
+ M manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_predictions.csv
+ M manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md
+ M manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv
+ M manual_tests/manual_test_config.toml
+ M manual_tests/run_mwe_eval.py
+?? manual_tests/MLFLOW_STARTUP_REPORT.md
+?? manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold_v.1.0.csv
+?? manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold_versions/

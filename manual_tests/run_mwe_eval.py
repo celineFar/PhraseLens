@@ -12,8 +12,9 @@ import shutil
 import subprocess
 import sys
 from collections import defaultdict
-from datetime import datetime, timezone
 from pathlib import Path
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -631,8 +632,8 @@ def main() -> None:
     start = None
     end = None
 
-    run_ts = datetime.now(timezone.utc)
-    run_id = run_ts.strftime("%Y%m%d_%H%M%S")
+    run_ts = datetime.now(ZoneInfo("Asia/Yerevan"))
+    run_id = run_ts.strftime("%Y-%m-%d_%H-%M-%S")
     run_label = cfg("run_label", "")
     run_notes = cfg("run_notes", "").strip()
     if run_label:

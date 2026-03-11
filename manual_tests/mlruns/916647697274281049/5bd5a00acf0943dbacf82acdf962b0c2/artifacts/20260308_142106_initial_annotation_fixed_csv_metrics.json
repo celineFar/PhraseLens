@@ -1,0 +1,12 @@
+{
+  "run_id": "20260308_142106_initial_annotation_fixed_csv",
+  "generated_at_utc": "2026-03-08T14:21:06.616720+00:00",
+  "gold": 27,
+  "predicted": 75,
+  "tp": 25,
+  "fp": 50,
+  "fn": 2,
+  "precision": 0.333333,
+  "recall": 0.925926,
+  "f1": 0.490196
+}

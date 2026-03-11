@@ -1,0 +1,15 @@
+artifact_uri: file:///home/ubuntu/PhraseLens/manual_tests/mlruns/916647697274281049/b51284aa16c2471a9112517c7304c565/artifacts
+end_time: 1773064586812
+entry_point_name: ''
+experiment_id: '916647697274281049'
+lifecycle_stage: active
+run_id: b51284aa16c2471a9112517c7304c565
+run_name: backfill_20260309_114310_gold-corrected
+run_uuid: b51284aa16c2471a9112517c7304c565
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1773064586794
+status: 3
+tags: []
+user_id: ubuntu

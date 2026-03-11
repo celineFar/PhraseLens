@@ -1,0 +1,382 @@
+diff --git a/manual_tests/README.md b/manual_tests/README.md
+index aa50cef..a96a8d7 100644
+--- a/manual_tests/README.md
++++ b/manual_tests/README.md
+@@ -69,6 +69,8 @@ Gold-only mode example (use annotated rows in `gold.csv` as evaluation input):
+ 
+ MLflow logging is integrated in `run_mwe_eval.py` and is enabled by default.
+ 
++Detailed startup/report guide: `manual_tests/MLFLOW_STARTUP_REPORT.md`.
++
+ Install dependencies:
+ 
+ ```bash
+@@ -87,7 +89,21 @@ Run with MLflow (default local tracking dir):
+ Open the tracking UI:
+ 
+ ```bash
+-.venv/bin/mlflow ui --backend-store-uri file:manual_tests/mlruns
++.venv/bin/mlflow ui \
++  --backend-store-uri file:/home/ubuntu/PhraseLens/manual_tests/mlruns \
++  --host 0.0.0.0 \
++  --port 5000
++```
++
++### From `.venv` (activated)
++
++```bash
++cd /home/ubuntu/PhraseLens
++source .venv/bin/activate
++mlflow ui \
++  --backend-store-uri file:/home/ubuntu/PhraseLens/manual_tests/mlruns \
++  --host 0.0.0.0 \
++  --port 5000
+ ```
+ 
+ ## Add Another Dataset/Split
+diff --git a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold.csv b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold.csv
+deleted file mode 100644
+index b9e2851..0000000
+--- a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold.csv
++++ /dev/null
+@@ -1,30 +0,0 @@
+-episode_name,season,line_index,speaker,line,expression,expression_type,label,notes
+-s04e12_benefits_l1055_1259,4,1061,Ted,"So, take out the trash.",take out,phrasal_verb,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1068,Robin,"No, I went there yesterday... Stop it! Stop it! My God, what happens? When we were a couple, we lived together and we almost went insane.",live together,phrasal_verb,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1072,Barney,"I explained. I said, Madeline, every international conflict essentially boils down to sexual tension.",boil down,phrasal_verb,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1087,Marshall,"You do not care what, guys? You are back together?",back together,phrasal_verb,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1091,Marshall,I was working and I had to take a leap here...reading this magazine. In... the room there.,take a leap,idiom,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1093,Robin,"If this is a problem. You've done all the way here to read a magazine? I am willing to bet that there is a place to read this magazine at work. You know, a room with a little man on the door?",all the way,idiom,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1110,Lily,"No. It could ruin your friendship. When two former try the ""right opportunity"", someone always ends in pain.",end in,phrasal_verb,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1116,Ted,Absolutely! Let's multitasking. Use sex to spice up the boring activities.,spice up,phrasal_verb,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1131,Lily,You must learn to express your feelings. Perhaps you should see a psychiatrist.,see a psychiatrist,idiom,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1164,Lily,"No, it's wrong. You must learn to get it out. As we did in my kindergarten class. ""The time for emotions"", every Tuesday morning.",get out,phrasal_verb,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1169,Robin,"Sure, it was a good one. Personal memo: leave it lying around the pizza box more often.",lie around,phrasal_verb,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1170,Ted,"Okay, see you later.",see you later,idiom,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1178,Ted,No. It meant nothing. It was just a reflex when we were a couple. But I did everything go wrong.,go wrong,phrasal_verb,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1183,Robin,"Come on, Lily. Do not your Ted.",come on,idiom,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1191,Robin,"This is for the best. It was fun, but I do not want it becoming weird.",for the best,idiom,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1204,Marshall,"Everything was going well. I felt more and more comfortable, more confident. I could conquer the world. One morning I'm in the eighth with a magazine.",go well,phrasal_verb,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1209,Barney,"Because of your bickering roommates are always a source of conflict between you two, I wanted to help. In fact, I went to the post. I took you stamps. In about 10 000. That should be enough.",in fact,idiom,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1211,Barney,I took it in passing. It's nothing.,in passing,idiom,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1223,Barney,"No. This is not true, no. This is not true, no. No. Robin is all yours, man. ",all yours,idiom,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1223,Barney,"Exploding yourself with it. Now if you'll excuse me, I'll go sleep with other girls.",sleep with,phrasal_verb,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1228,Barney,"And I went with a bang. Why did I do that? It comes perhaps my father issues, but... basically, I allowed my best friend to sleep with the girl of my dreams. I completely sabotaged. And now, I smoke. I smoke.",go with a bang,idiom,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1229,Lily,Get out of here.,get out of,phrasal_verb,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1241,Marshall,Thank you. I would have done well at some point.,at some point,idiom,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1241,Marshall,Sometimes you have to... You have to say and... go there.,go there,phrasal_verb,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1242,Barney,"Marshall, I gotta go. ",gotta go,idiom,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1245,Robin,"And... our little arrangement is... completed, by the way.",look for,phrasal_verb,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1245,Robin,"I go step-louse. If you are looking for Ted, he was released. And... our little arrangement is... completed, by the way.",by the way,idiom,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1255,Robin,"Right. It's not like you, you know? In addition, we are friends. I want to complicate matters by committing. Hanging out with friends never works. So... you want to go eat a taco?",hang out,phrasal_verb,gold,manual_annotation
+-s04e12_benefits_l1055_1259,4,1259,Robin,"Come on, I'm hungry.",come on,idiom,gold,manual_annotation
+diff --git a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
+index 63c65c1..811f309 100644
+--- a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
++++ b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
+@@ -1,12 +1,12 @@
+ {
+-  "run_id": "20260309_114310_gold-corrected",
+-  "generated_at_utc": "2026-03-09T11:43:10.221486+00:00",
++  "run_id": "20260309_134256_gold_v1_0",
++  "generated_at_utc": "2026-03-09T13:42:56.181980+00:00",
+   "gold": 29,
+-  "predicted": 31,
++  "predicted": 30,
+   "tp": 23,
+-  "fp": 8,
++  "fp": 7,
+   "fn": 6,
+-  "precision": 0.741935,
++  "precision": 0.766667,
+   "recall": 0.793103,
+-  "f1": 0.766667
++  "f1": 0.779661
+ }
+\ No newline at end of file
+diff --git a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_predictions.csv b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_predictions.csv
+index 699a3b4..28a2c70 100644
+--- a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_predictions.csv
++++ b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_predictions.csv
+@@ -22,8 +22,7 @@ s04e12_benefits_l1055_1259,4,1211,Barney,I took it in passing. It's nothing.,,,,
+ s04e12_benefits_l1055_1259,4,1211,Barney,I took it in passing. It's nothing.,in passing,idiom,gold,manual_annotation,yes,in passing,idiom,engine_idiom,tp
+ s04e12_benefits_l1055_1259,4,1223,Barney,"No. This is not true, no. This is not true, no. No. Robin is all yours, man. ",all yours,idiom,gold,manual_annotation,yes,all yours,idiom,engine_idiom,tp
+ s04e12_benefits_l1055_1259,4,1223,Barney,"Exploding yourself with it. Now if you'll excuse me, I'll go sleep with other girls.",sleep with,phrasal_verb,gold,manual_annotation,no,,,,fn
+-s04e12_benefits_l1055_1259,4,1228,Barney,"And I went with a bang. Why did I do that? It comes perhaps my father issues, but... basically, I allowed my best friend to sleep with the girl of my dreams. I completely sabotaged. And now, I smoke. I smoke.",,,,,yes,sleep with,phrasal_verb,engine_phrasal_verb,fp
+-s04e12_benefits_l1055_1259,4,1228,Barney,"And I went with a bang. Why did I do that? It comes perhaps my father issues, but... basically, I allowed my best friend to sleep with the girl of my dreams. I completely sabotaged. And now, I smoke. I smoke.",go with a bang,idiom,gold,manual_annotation,yes,go with a bang,idiom,engine_idiom,tp
++s04e12_benefits_l1055_1259,4,1228,Barney,And I went with a bang. Why did I do that? It comes perhaps my father issues.,go with a bang,idiom,gold,manual_annotation,yes,go with a bang,idiom,engine_idiom,tp
+ s04e12_benefits_l1055_1259,4,1229,Lily,Get out of here.,,,,,yes,get out,phrasal_verb,engine_phrasal_verb,fp
+ s04e12_benefits_l1055_1259,4,1229,Lily,Get out of here.,,,,,yes,get out!,phrasal_verb,engine_phrasal_verb,fp
+ s04e12_benefits_l1055_1259,4,1229,Lily,Get out of here.,get out of,phrasal_verb,gold,manual_annotation,yes,get out of,phrasal_verb,engine_phrasal_verb,tp
+diff --git a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md
+index f356996..fec7269 100644
+--- a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md
++++ b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md
+@@ -1,41 +1,41 @@
+ # MWE Evaluation Report
+ 
+ ## Run Metadata
+-- Run ID: `20260309_114310_gold-corrected`
+-- Generated at (UTC): `2026-03-09T11:43:10.221486+00:00`
++- Run ID: `20260309_134256_gold_v1_0`
++- Generated at (UTC): `2026-03-09T13:42:56.181980+00:00`
+ - Run notes: `-` 
+ 
+ ## Dataset Scope
+-- Source: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold.csv (gold_only)`
++- Source: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold_v.1.0.csv (gold_only)`
+ - Evaluated slice: `s04e12_benefits_l1055_1259` (contiguous proxy episode)
+ - Slice definition: `line_index` 1061-1259 (199 dialogue lines)
+ - Prediction input lines: 26 gold-covered lines only
+ - Match mode: `ignore_type` (`ignore_type` treats same expression text as correct even with different expression_type)
+ 
+ ## Files
+-- Gold annotations: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold.csv`
+-- Engine predictions: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_114310_gold-corrected_predictions.csv`
++- Gold annotations: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold_v.1.0.csv`
++- Engine predictions: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_134256_gold_v1_0_predictions.csv`
+ 
+ ## Overall Metrics
+ - Gold instances: 29
+-- Predicted instances: 31
++- Predicted instances: 30
+ - True Positives (TP): 23
+-- False Positives (FP): 8
++- False Positives (FP): 7
+ - False Negatives (FN): 6
+-- Precision: 0.7419
++- Precision: 0.7667
+ - Recall: 0.7931
+-- F1 score: 0.7667
++- F1 score: 0.7797
+ 
+ ## By Expression Type
+ ### Phrasal Verbs
+ - Gold: 15
+-- Predicted: 19
++- Predicted: 18
+ - TP: 9
+-- FP: 10
++- FP: 9
+ - FN: 6
+-- Precision: 0.4737
++- Precision: 0.5000
+ - Recall: 0.6000
+-- F1: 0.5294
++- F1: 0.5455
+ 
+ ### Idioms
+ - Gold: 14
+@@ -51,7 +51,6 @@
+ - line 1072 | * | `boil down to` | I explained. I said, Madeline, every international conflict essentially boils down to sexual tension.
+ - line 1164 | * | `get out!` | No, it's wrong. You must learn to get it out. As we did in my kindergarten class. "The time for emotions", every Tuesday morning.
+ - line 1211 | * | `take in` | I took it in passing. It's nothing.
+-- line 1228 | * | `sleep with` | And I went with a bang. Why did I do that? It comes perhaps my father issues, but... basically, I allowed my best friend to sleep with the girl of my dreams. I completely sabotaged. And now, I smoke. I smoke.
+ - line 1229 | * | `get out` | Get out of here.
+ - line 1229 | * | `get out!` | Get out of here.
+ - line 1241 | * | `do better` | Thank you. I would have done well at some point.
+diff --git a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv
+index 794b88a..7b3a203 100644
+--- a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv
++++ b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv
+@@ -17,3 +17,4 @@ run_id,generated_at_utc,dataset_id,split_id,gold,predicted,tp,fp,fn,precision,re
+ 20260309_113425_gold-corrected,2026-03-09T11:34:25.821622+00:00,himym,s04e12_benefits_l1055_1259,29,31,23,8,6,0.741935,0.793103,0.766667,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_113425_gold-corrected_predictions.csv,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_113425_gold-corrected_report.md,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_113425_gold-corrected_metrics.json,post-migration check
+ 20260309_113842_gold-corrected,2026-03-09T11:38:42.165514+00:00,himym,s04e12_benefits_l1055_1259,29,31,23,8,6,0.741935,0.793103,0.766667,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_113842_gold-corrected_predictions.csv,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_113842_gold-corrected_report.md,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_113842_gold-corrected_metrics.json,
+ 20260309_114310_gold-corrected,2026-03-09T11:43:10.221486+00:00,himym,s04e12_benefits_l1055_1259,29,31,23,8,6,0.741935,0.793103,0.766667,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_114310_gold-corrected_predictions.csv,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_114310_gold-corrected_report.md,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_114310_gold-corrected_metrics.json,
++20260309_134256_gold_v1_0,2026-03-09T13:42:56.181980+00:00,himym,s04e12_benefits_l1055_1259,29,30,23,7,6,0.766667,0.793103,0.779661,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_134256_gold_v1_0_predictions.csv,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_134256_gold_v1_0_report.md,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_134256_gold_v1_0_metrics.json,
+diff --git a/manual_tests/manual_test_config.toml b/manual_tests/manual_test_config.toml
+index 86af45e..89346b8 100644
+--- a/manual_tests/manual_test_config.toml
++++ b/manual_tests/manual_test_config.toml
+@@ -12,7 +12,7 @@ output_root = "manual_tests"
+ input_mode = "gold_only"
+ 
+ # Gold annotations CSV (required)
+-gold_csv = "manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold.csv"
++gold_csv = "manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold_v.1.0.csv"
+ 
+ # Transcript-only fields (leave empty in gold_only mode)
+ source_csv = ""
+@@ -23,7 +23,7 @@ line_col = ""
+ season_col = ""
+ 
+ # Optional run metadata
+-run_label = "gold-corrected"
++run_label = "gold_v1_0"
+ run_notes = ""
+ 
+ # Phrasal verb filter strategy
+@@ -37,7 +37,7 @@ match_mode = "ignore_type"
+ 
+ # MLflow settings
+ # mlflow_mode: auto | enabled | disabled
+-mlflow_mode = "auto"
++mlflow_mode = "enabled"
+ mlflow_tracking_uri = ""
+ mlflow_experiment = "manual_tests"
+ 
+diff --git a/manual_tests/run_mwe_eval.py b/manual_tests/run_mwe_eval.py
+index bf7454a..568eb20 100644
+--- a/manual_tests/run_mwe_eval.py
++++ b/manual_tests/run_mwe_eval.py
+@@ -9,6 +9,7 @@ import hashlib
+ import json
+ import re
+ import shutil
++import subprocess
+ import sys
+ from collections import defaultdict
+ from datetime import datetime, timezone
+@@ -380,6 +381,63 @@ def _sha256_file(path: Path) -> str:
+     return digest.hexdigest()
+ 
+ 
++def _run_git_command(args: list[str]) -> tuple[bool, str]:
++    try:
++        proc = subprocess.run(
++            ["git", *args],
++            cwd=PROJECT_ROOT,
++            check=False,
++            capture_output=True,
++            text=True,
++        )
++    except OSError:
++        return False, ""
++    if proc.returncode != 0:
++        return False, ""
++    return True, proc.stdout.strip()
++
++
++def _collect_git_run_metadata(runs_dir: Path, run_id: str) -> tuple[dict, dict, list[Path]]:
++    params: dict[str, str] = {}
++    tags: dict[str, str] = {}
++    artifacts: list[Path] = []
++
++    ok, commit = _run_git_command(["rev-parse", "HEAD"])
++    if ok and commit:
++        params["git_commit"] = commit
++        tags["git_commit"] = commit
++
++    ok, short_commit = _run_git_command(["rev-parse", "--short", "HEAD"])
++    if ok and short_commit:
++        params["git_commit_short"] = short_commit
++
++    ok, branch = _run_git_command(["rev-parse", "--abbrev-ref", "HEAD"])
++    if ok and branch:
++        params["git_branch"] = branch
++        tags["git_branch"] = branch
++
++    ok, status_porcelain = _run_git_command(["status", "--porcelain"])
++    if ok:
++        git_dirty = bool(status_porcelain)
++        params["git_dirty"] = str(git_dirty).lower()
++        tags["git_dirty"] = str(git_dirty).lower()
++
++    ok, status_short = _run_git_command(["status", "--short", "--branch"])
++    if ok and status_short:
++        status_path = runs_dir / f"{run_id}_git_status.txt"
++        status_path.write_text(status_short + "\n", encoding="utf-8")
++        artifacts.append(status_path)
++
++    if params.get("git_dirty") == "true":
++        ok, diff = _run_git_command(["diff", "--no-ext-diff", "HEAD"])
++        if ok and diff:
++            diff_path = runs_dir / f"{run_id}_git_diff.patch"
++            diff_path.write_text(diff, encoding="utf-8")
++            artifacts.append(diff_path)
++
++    return params, tags, artifacts
++
++
+ def _log_mlflow_run(
+     enabled: bool,
+     tracking_uri: str,
+@@ -426,6 +484,35 @@ def _load_config(config_path: Path) -> dict:
+     raise ValueError("Unsupported config format. Use .toml or .json")
+ 
+ 
++def _version_key_from_gold_filename(path: Path) -> tuple:
++    stem = path.stem.lower()
++    if not stem.startswith("gold_v"):
++        return (0, [], path.name.lower())
++    suffix = stem[len("gold_v") :]
++    nums = [int(x) for x in re.findall(r"\d+", suffix)]
++    return (1, nums, path.name.lower())
++
++
++def _resolve_gold_csv(case_dir: Path, configured_gold_csv: str, output_root: Path) -> Path:
++    if configured_gold_csv:
++        gold_csv = Path(configured_gold_csv)
++    else:
++        gold_csv = case_dir / "gold.csv"
++    if gold_csv.exists():
++        return gold_csv
++
++    if not configured_gold_csv:
++        legacy = output_root / f"{case_dir.name}_gold.csv"
++        if legacy.exists():
++            return legacy
++
++    versioned = sorted(case_dir.glob("gold_v*.csv"), key=_version_key_from_gold_filename)
++    if versioned:
++        return versioned[-1]
++
++    return gold_csv
++
++
+ def main() -> None:
+     parser = argparse.ArgumentParser(description="Run MWE evaluation against manual gold.")
+     parser.add_argument("--config", default="manual_tests/manual_test_config.toml")
+@@ -533,18 +620,11 @@ def main() -> None:
+     mlflow_experiment = cfg("mlflow_experiment", "manual_tests")
+ 
+     configured_gold_csv = cfg("gold_csv", "")
+-    if configured_gold_csv:
+-        gold_csv = Path(configured_gold_csv)
+-    else:
+-        gold_csv = case_dir / "gold.csv"
+-        if not gold_csv.exists():
+-            legacy = output_root / f"{split_id}_gold.csv"
+-            if legacy.exists():
+-                gold_csv = legacy
++    gold_csv = _resolve_gold_csv(case_dir, configured_gold_csv, output_root)
+     if not gold_csv.exists():
+         raise FileNotFoundError(
+             "Gold CSV not found. Provide --gold-csv or place file at "
+-            f"{case_dir / 'gold.csv'}"
++            f"{case_dir / 'gold.csv'} (or a versioned file like gold_v1.csv)"
+         )
+ 
+     source_desc = f"{gold_csv.as_posix()} (gold_only)"
+@@ -739,6 +819,8 @@ def main() -> None:
+         },
+     )
+ 
++    git_params, git_tags, git_artifacts = _collect_git_run_metadata(runs_dir, run_id)
++
+     _log_mlflow_run(
+         enabled=mlflow_enabled,
+         tracking_uri=mlflow_tracking_uri,
+@@ -758,6 +840,7 @@ def main() -> None:
+             "gold_sha256": _sha256_file(gold_csv),
+             "gold_rows": len(gold_rows),
+             "config_path": config_path.as_posix(),
++            **git_params,
+         },
+         metrics={
+             "gold": float(len(metrics["gold_set"])),
+@@ -786,6 +869,7 @@ def main() -> None:
+             latest_report,
+             latest_metrics,
+             case_dir / "run_history.csv",
++            *git_artifacts,
+         ],
+         tags={
+             "component": "manual_tests",
+@@ -794,6 +878,7 @@ def main() -> None:
+             "run_id": run_id,
+             "generated_at_utc": run_ts_iso,
+             "run_notes": run_notes,
++            **git_tags,
+         },
+     )

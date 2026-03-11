@@ -1,0 +1,13 @@
+diff --git a/manual_tests/manual_test_config.toml b/manual_tests/manual_test_config.toml
+index 89346b8..218592c 100644
+--- a/manual_tests/manual_test_config.toml
++++ b/manual_tests/manual_test_config.toml
+@@ -24,7 +24,7 @@ season_col = ""
+ 
+ # Optional run metadata
+ run_label = "gold_v1_0"
+-run_notes = ""
++run_notes = "before any changes"
+ 
+ # Phrasal verb filter strategy
+ # Choices: none, dep_only, blocklist, dep_extended, dep_highfreq, hybrid

@@ -1,0 +1,12 @@
+{
+  "run_id": "20260308_141836_initial_annotation",
+  "generated_at_utc": "2026-03-08T14:18:36.710430+00:00",
+  "gold": 27,
+  "predicted": 75,
+  "tp": 22,
+  "fp": 53,
+  "fn": 5,
+  "precision": 0.293333,
+  "recall": 0.814815,
+  "f1": 0.431373
+}
