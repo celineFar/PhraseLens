@@ -5,13 +5,13 @@
   "sources": {
     "/home/ubuntu/PhraseLens/manual_tests/run_mwe_eval.py": {
       "exists": true,
-      "size": 42650,
-      "mtime_ns": 1773294752435954356
+      "size": 42971,
+      "mtime_ns": 1773296191590338180
     },
     "/home/ubuntu/PhraseLens/app/search/mwe/lexicon.py": {
       "exists": true,
-      "size": 11369,
-      "mtime_ns": 1773213933053123759
+      "size": 11545,
+      "mtime_ns": 1773296989213796965
     },
     "data/lexicons/phrasal_verbs_wecan.json": {
       "exists": true,

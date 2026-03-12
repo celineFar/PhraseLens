@@ -24,7 +24,7 @@ season_col = ""
 
 # Optional run metadata
 run_label = "gold_v1_0"
-run_notes = "Supress idioms that have verb, they would be caught in phrasal verbs"
+run_notes = "batch idiom lemmatization"
 log_notes = ""
 
 # Phrasal verb filter strategy
