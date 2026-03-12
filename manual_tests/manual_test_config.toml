@@ -24,7 +24,7 @@ season_col = ""
 
 # Optional run metadata
 run_label = "gold_v1_0"
-run_notes = "remove test data leak"
+run_notes = "supress idiom detection in case of pv"
 
 # Phrasal verb filter strategy
 # Choices: none, dep_only, blocklist, dep_extended, dep_highfreq, hybrid

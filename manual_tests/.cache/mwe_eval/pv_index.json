@@ -5,8 +5,8 @@
   "sources": {
     "/home/ubuntu/PhraseLens/manual_tests/run_mwe_eval.py": {
       "exists": true,
-      "size": 41462,
-      "mtime_ns": 1773292978668787175
+      "size": 42650,
+      "mtime_ns": 1773294752435954356
     },
     "/home/ubuntu/PhraseLens/app/search/mwe/lexicon.py": {
       "exists": true,

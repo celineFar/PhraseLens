@@ -1,0 +1,14 @@
+## replay-experiments
+ M manual_tests/.cache/mwe_eval/idiom_index.json
+ M manual_tests/.cache/mwe_eval/pv_index.json
+ M manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
+ M manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_predictions.csv
+ M manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md
+ M manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv
+ M manual_tests/manual_test_config.toml
+?? manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-12_09-52-54_gold_v1_0_notes.txt
+?? manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-12_09-59-09_gold_v1_0_metrics.json
+?? manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-12_09-59-09_gold_v1_0_notes.txt
+?? manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-12_09-59-09_gold_v1_0_predictions.csv
+?? manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-12_09-59-09_gold_v1_0_report.md
+?? repo-main/

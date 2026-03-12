@@ -1,0 +1,45 @@
+# Manual test configuration (TOML supports comments).
+# This file is now the default config for `run_mwe_eval.py`.
+
+# Dataset identity used for output paths: manual_tests/datasets/<dataset_id>/<split_id>/
+dataset_id = "himym"
+split_id = "s04e12_benefits_l1055_1259"
+output_root = "manual_tests"
+
+# Input mode:
+# - "gold_only": evaluate directly from gold_csv rows
+# - "transcript": read source_csv slice and align against gold line_index values
+input_mode = "gold_only"
+
+# Gold annotations CSV (required)
+gold_csv = "manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold_v.1.0.csv"
+
+# Transcript-only fields (leave empty in gold_only mode)
+source_csv = ""
+start_line = ""
+end_line = ""
+speaker_col = ""
+line_col = ""
+season_col = ""
+
+# Optional run metadata
+run_label = "gold_v1_0"
+run_notes = "supress idiom detection in case of pv"
+
+# Phrasal verb filter strategy
+# Choices: none, dep_only, blocklist, dep_extended, dep_highfreq, hybrid
+pv_filter = "dep_extended"
+
+# Match mode:
+# - strict: line_index + expression_type + expression must match
+# - ignore_type: line_index + expression must match
+match_mode = "ignore_type"
+
+# MLflow settings
+# mlflow_mode: auto | enabled | disabled
+mlflow_mode = "enabled"
+mlflow_tracking_uri = ""
+mlflow_experiment = "manual_tests"
+
+# Reserved (CLI only; typically keep empty)
+config = ""
