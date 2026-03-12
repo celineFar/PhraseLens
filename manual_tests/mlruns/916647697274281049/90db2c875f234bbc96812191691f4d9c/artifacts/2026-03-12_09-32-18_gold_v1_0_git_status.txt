@@ -1,0 +1,11 @@
+## replay-experiments
+ M .gitignore
+ M manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
+ M manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md
+ M manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv
+?? manual_tests/.cache/
+?? manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-12_09-32-18_gold_v1_0_metrics.json
+?? manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-12_09-32-18_gold_v1_0_notes.txt
+?? manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-12_09-32-18_gold_v1_0_predictions.csv
+?? manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-12_09-32-18_gold_v1_0_report.md
+?? repo-main/

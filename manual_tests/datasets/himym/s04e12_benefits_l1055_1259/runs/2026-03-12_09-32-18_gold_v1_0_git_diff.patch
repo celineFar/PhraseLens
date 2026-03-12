@@ -1,0 +1,64 @@
+diff --git a/.gitignore b/.gitignore
+index fee9570..af1490a 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -34,13 +34,4 @@ Thumbs.db
+ 
+ exports/
+ external/
+-runs/
+ # MLflow
+-manual_tests/mlruns/
+-mlruns/
+-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
+-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_predictions.csv
+-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md
+-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv
+-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
+-manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_predictions.csv
+diff --git a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
+index bc5c43a..8981bef 100644
+--- a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
++++ b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_metrics.json
+@@ -1,6 +1,6 @@
+ {
+-  "run_id": "2026-03-11_13-33-44_gold_v1_0",
+-  "generated_at_utc": "2026-03-11T13:33:44.893726+04:00",
++  "run_id": "2026-03-12_09-32-18_gold_v1_0",
++  "generated_at_utc": "2026-03-12T09:32:18.167088+04:00",
+   "gold": 29,
+   "predicted": 76,
+   "tp": 16,
+diff --git a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md
+index 8988a59..ca499df 100644
+--- a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md
++++ b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/latest_report.md
+@@ -1,8 +1,8 @@
+ # MWE Evaluation Report
+ 
+ ## Run Metadata
+-- Run ID: `2026-03-11_13-33-44_gold_v1_0`
+-- Generated at (UTC): `2026-03-11T13:33:44.893726+04:00`
++- Run ID: `2026-03-12_09-32-18_gold_v1_0`
++- Generated at (UTC): `2026-03-12T09:32:18.167088+04:00`
+ - Run notes: `remove test data leak` 
+ 
+ ## Dataset Scope
+@@ -14,7 +14,7 @@
+ 
+ ## Files
+ - Gold annotations: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/gold_v.1.0.csv`
+-- Engine predictions: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-11_13-33-44_gold_v1_0_predictions.csv`
++- Engine predictions: `manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-12_09-32-18_gold_v1_0_predictions.csv`
+ 
+ ## Overall Metrics
+ - Gold instances: 29
+diff --git a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv
+index e488409..9f59fc2 100644
+--- a/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv
++++ b/manual_tests/datasets/himym/s04e12_benefits_l1055_1259/run_history.csv
+@@ -20,3 +20,4 @@ run_id,generated_at_utc,dataset_id,split_id,gold,predicted,tp,fp,fn,precision,re
+ 20260309_134256_gold_v1_0,2026-03-09T13:42:56.181980+00:00,himym,s04e12_benefits_l1055_1259,29,30,23,7,6,0.766667,0.793103,0.779661,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_134256_gold_v1_0_predictions.csv,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_134256_gold_v1_0_report.md,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260309_134256_gold_v1_0_metrics.json,
+ 20260311_073000_gold_v1_0,2026-03-11T07:30:00.950843+00:00,himym,s04e12_benefits_l1055_1259,29,30,23,7,6,0.766667,0.793103,0.779661,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260311_073000_gold_v1_0_predictions.csv,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260311_073000_gold_v1_0_report.md,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/20260311_073000_gold_v1_0_metrics.json,before any changes
+ 2026-03-11_13-33-44_gold_v1_0,2026-03-11T13:33:44.893726+04:00,himym,s04e12_benefits_l1055_1259,29,76,16,60,13,0.210526,0.551724,0.304762,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-11_13-33-44_gold_v1_0_predictions.csv,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-11_13-33-44_gold_v1_0_report.md,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-11_13-33-44_gold_v1_0_metrics.json,remove test data leak
++2026-03-12_09-32-18_gold_v1_0,2026-03-12T09:32:18.167088+04:00,himym,s04e12_benefits_l1055_1259,29,76,16,60,13,0.210526,0.551724,0.304762,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-12_09-32-18_gold_v1_0_predictions.csv,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-12_09-32-18_gold_v1_0_report.md,manual_tests/datasets/himym/s04e12_benefits_l1055_1259/runs/2026-03-12_09-32-18_gold_v1_0_metrics.json,remove test data leak
